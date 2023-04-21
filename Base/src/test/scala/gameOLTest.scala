@@ -18,7 +18,12 @@ class gameOLTest extends FlatSpec {
   val totalTurns: Int = System.getProperty("totalTurns", "200").toInt
   val mode: Int = System.getProperty("mode", "6").toInt
 
-  "gameOfLife" should "run with given arguments" in {
+  println(s"Width: $width")
+  println(s"Height: $height")
+  println(s"Total turns: $totalTurns")
+  println(s"Mode: $mode")
+
+  mode match {
     // Use the width, height, totalTurns, and mode variables in your test
     //    case 1 => {
     //      // Messaging
@@ -49,12 +54,12 @@ class gameOLTest extends FlatSpec {
     //    }
     //
     //
-    //    case 5 => {
-    //      // asyncCall
-    //      val agents = generated.example.gameOfLifeRPC.InitData(width, height)
-    //      API.OptimizationConfig.mergedWorker()
-    //      val snapshot1 = API.Simulate(agents, totalTurns, role, port)
-    //    }
+        case 5 => {
+          // asyncCall
+          val agents = generated.example.gameOfLifeRPC.InitData(width, height)
+//          API.OptimizationConfig.mergedWorker()
+          val snapshot1 = API.Simulate(agents, totalTurns)
+        }
     //
     //    case 6 => {
     //      // Messaging, concurrent
@@ -71,20 +76,20 @@ class gameOLTest extends FlatSpec {
     //      val snapshot1 = API.Simulate(agents, totalTurns, role, port)
     //    }
 
-    //    case 8 => {
-    //      //tile layout 2D
-    //      val agents = generated.example.gameOfLifeTile2DArray.InitData(width, height)
-    ////      API.OptimizationConfig.mergedWorker()
-    ////      Simulate.log = null
+        case 8 => {
+          //tile layout 2D
+          val agents = generated.example.gameOfLifeTile2DArray.InitData(width, height)
+    //      API.OptimizationConfig.mergedWorker()
+    //      Simulate.log = null
+          val snapshot1 = API.Simulate(agents, totalTurns)
+        }
+    //    case 9 => {
+    //      //tile layout 1D
+    //      val agents = generated.example.gameOfLifeTile1DArray.InitData(width, height)
+    //      //      API.OptimizationConfig.mergedWorker()
+    //      //      Simulate.log = null
     //      val snapshot1 = API.Simulate(agents, totalTurns)
     //    }
-//    case 9 => {
-//      //tile layout 1D
-//      val agents = generated.example.gameOfLifeTile1DArray.InitData(width, height)
-//      //      API.OptimizationConfig.mergedWorker()
-//      //      Simulate.log = null
-//      val snapshot1 = API.Simulate(agents, totalTurns)
-//    }
 
     case 10 => {
       //tile layout 2DA OR
