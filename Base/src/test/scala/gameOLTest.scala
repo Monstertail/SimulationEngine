@@ -13,13 +13,17 @@ class gameOLTest extends FlatSpec {
   var role: String = "Standalone"
   var port: Int = 25251
 
-  val width: Int = System.getProperty("width", "1000").toInt
-  val height: Int = System.getProperty("height", "100").toInt
+  val width: Int = System.getProperty("width", "500").toInt
+  val height: Int = System.getProperty("height", "50").toInt
+  val col: Int = System.getProperty("col", "2").toInt
+  val row: Int = System.getProperty("row", "2").toInt
   val totalTurns: Int = System.getProperty("totalTurns", "200").toInt
   val mode: Int = System.getProperty("mode", "6").toInt
 
   println(s"Width: $width")
   println(s"Height: $height")
+  println(s"Column: $col")
+  println(s"Row: $row")
   println(s"Total turns: $totalTurns")
   println(s"Mode: $mode")
 
@@ -94,6 +98,13 @@ class gameOLTest extends FlatSpec {
     case 10 => {
       //tile layout 2DA OR
       val agents = generated.example.gameOfLifeTile2DArrayOR.InitData(width, height)
+      //      API.OptimizationConfig.mergedWorker()
+      //      Simulate.log = null
+      val snapshot1 = API.Simulate(agents, totalTurns)
+    }
+    case 11 => {
+      //tile layout 2DA OR
+      val agents = generated.example.gameOfLifeMultiTile.InitData(width, height,col,row)
       //      API.OptimizationConfig.mergedWorker()
       //      Simulate.log = null
       val snapshot1 = API.Simulate(agents, totalTurns)

@@ -45,7 +45,7 @@ class gameOLTest extends FlatSpec {
     case 5 => {
       // asyncCall
       val agents = generated.example.gameOfLifeRPC.InitData(width, height)
-      API.OptimizationConfig.mergedWorker()
+//      API.OptimizationConfig.mergedWorker()
       val snapshot1 = API.Simulate(agents, totalTurns, role, port)
     }
 //
