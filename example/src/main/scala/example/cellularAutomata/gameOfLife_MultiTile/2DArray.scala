@@ -12,11 +12,17 @@ import scala.reflect.ClassTag
 class Array2D(val width: Int, val height: Int) {
 
   var tileNO: Int = _
-//    val totalComp: Int = 1
-//    implicit val ct: ClassTag[Boolean] = scala.reflect.classTag[Boolean]
   var currentBoard: Array[Array[Boolean]] = Array.ofDim[Boolean](height, width)
   var newBoard: Array[Array[Boolean]] = Array.ofDim[Boolean](height, width)
   //store neighbor information
+  var topEdge: Array[Boolean]=Array.ofDim[Boolean]( width)
+  var bottomEdge: Array[Boolean]=Array.ofDim[Boolean]( width)
+  var leftEdge: Array[Boolean]=Array.ofDim[Boolean]( height)
+  var rightEdge: Array[Boolean]=Array.ofDim[Boolean]( height)
+  var topLeft:Boolean = _
+  var topRight:Boolean = _
+  var bottomLeft:Boolean = _
+  var bottomRight:Boolean = _
 
   var i:Int=0
   var j:Int=0
@@ -46,15 +52,89 @@ class Array2D(val width: Int, val height: Int) {
 
   }
 
-  def decodeMsg(state: Vector[Boolean],mode:Int,from:Int,id:Int): Unit = {
-    if(mode>=8){
-      println("ERROR! TOO MANY MODES!")
+  def decodeMsg(state: Vector[Boolean],direction:Int,from:Int,id:Int): Unit = {
+    if(direction>=8){
+      println("Direction TOTAL NUMBER ERROR !")
     }
-    else{
+    //debug
+//    else{
+//
+//      println(s"direction $direction, length: ${state.length} from tile $from for tile $id with 2DArray of $tileNO")
+//    }
+    direction match{
+      case 0=>{
+        //from the neighbor's bottom right
+        topLeft=state(0)
 
-      println(s"mode $mode, length: ${state.length} from tile $from for tile $id with 2DArray of $tileNO")
+      }
+      case 1=>{
+        //from the neighbor's right
+        leftEdge=state.toArray
+      }
+
+      case 2=>{
+        //from the neighbor's  top Right
+        bottomLeft=state(0)
+      }
+
+      case 3=>{
+        //from the neighbor's  bottom Edge
+        topEdge=state.toArray
+      }
+
+      case 4=>{
+        //from the neighbor's top Edge
+        bottomEdge=state.toArray
+      }
+
+      case 5=>{
+        //from the neighbor's bottom left
+        topRight=state(0)
+      }
+
+      case 6=>{
+        //from the neighbor's left Edge
+        rightEdge=state.toArray
+      }
+
+      case 7=>{
+        //from the neighbor's topleft
+        bottomRight=state(0)
+      }
     }
 
+  }
+
+  def locationQuery(r:Int,c:Int): Boolean = {
+      if(r== -1){
+        if (c == -1){
+          return topLeft
+        }
+        else if (c == width){
+          return  topRight
+        }
+        else{
+          return topEdge(c)
+        }
+      } else if (r==height){
+        if (c == -1) {
+          return bottomLeft
+        }
+        else if (c == width ) {
+          return bottomRight
+        }
+        else {
+          return bottomEdge(c)
+        }
+      } else{
+        if (c == -1){
+          return leftEdge(r)
+        }else if(c==width){
+          return rightEdge(r)
+        } else{
+          return currentBoard(r)(c)
+        }
+      }
   }
 
   def update(): Unit = {
@@ -69,9 +149,13 @@ class Array2D(val width: Int, val height: Int) {
           nj = -1
           while (nj <= 1) {
             if (!(ni == 0 && nj == 0)) {
-              val row = (i + ni + height) % height // handle wrapping at edges
-              val col = (j + nj + width) % width // handle wrapping at edges
-              if (currentBoard(row)(col)) aliveNeighbors = aliveNeighbors + 1
+//              val row = (i + ni + height) % height // handle wrapping at edges
+//              val col = (j + nj + width) % width // handle wrapping at edges
+//              if (currentBoard(row)(col)) aliveNeighbors = aliveNeighbors + 1
+              //check the location and update
+              val row = i + ni
+              val col = j + nj
+              if (locationQuery(row,col)) aliveNeighbors = aliveNeighbors + 1
             }
             nj = nj + 1
           }
@@ -125,6 +209,7 @@ class Array2D(val width: Int, val height: Int) {
   }
 
  def printBooleanArray(arr: Array[Array[Boolean]]): Unit = {
+   println(s"tile id: $tileNO")
     for ( m <- arr.indices) {
       for (n <- arr(m).indices) {
         if (arr(m)(n)) print(1)

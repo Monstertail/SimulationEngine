@@ -14,16 +14,16 @@ import scala.collection.mutable.ListBuffer
 class Tile(val width: Int, val height: Int,val array2D: Array2D ) extends Actor {
 
   @transparencyPropagating
-  def tell(state: Vector[Boolean], mode: Int, from: Int): Unit = {
+  def tell(state: Vector[Boolean], direction: Int, from: Int): Unit = {
     // shall we set return type to Unit or Vector[boolean]?
-//    array2D.decodeMsg(state, mode, from, id.toInt)
-    println("id"+id+"from:" + from)
-    //        array2D
+    array2D.decodeMsg(state, direction, from, id.toInt)
+//    println("id"+id+"from:" + from)
+
   }
 
     def main(): Unit = {
       println("agent id " + id )
-                  println(connectedAgents.map(_.id))
+      println(connectedAgents.map(_.id))
 
         while (true) {
             handleRPC()
@@ -40,7 +40,7 @@ class Tile(val width: Int, val height: Int,val array2D: Array2D ) extends Actor 
             waitAndReply(1)
             //iterate all cells
             array2D.update()
-            //check the correctness
+//            //check the correctness
 //            array2D.check()
 
             array2D.swap_ref()
