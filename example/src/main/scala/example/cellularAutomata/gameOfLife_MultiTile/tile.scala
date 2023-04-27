@@ -36,17 +36,15 @@ class Tile(val width: Int, val height: Int,val array2D: Array2D ) extends Actor 
                 callAndForget(v.tell(msgs(index), index,id.toInt), 1)
                 index =index+ 1
             }
-//////          check the connectedAgents
-////            connectedAgents.map(x => x.asInstanceOf[Tile]).foreach(y => print(y.id))
-////            println()
-//            waitAndReply(1)
-//            //iterate all cells
-//            array2D.update()
-//            //check the correctness
-////            array2D.check()
-//
-//            array2D.swap_ref()
-            waitRounds(1)
+
+            waitAndReply(1)
+            //iterate all cells
+            array2D.update()
+            //check the correctness
+//            array2D.check()
+
+            array2D.swap_ref()
+//            waitRounds(1)
         }
     }
 }
