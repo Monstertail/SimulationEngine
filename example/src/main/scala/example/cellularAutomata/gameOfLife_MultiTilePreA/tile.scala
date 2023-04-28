@@ -36,15 +36,14 @@ class Tile(val width: Int, val height: Int,val array2D: Array2D ) extends Actor 
                 callAndForget(v.tell(msgs(index), index,id.toInt), 1)
                 index =index+ 1
             }
-
+// check if the array changed due to RPC
 //            array2D.check()
             waitAndReply(1)
-            //check the correctness of current Board after RPC
-            array2D.check()
+//            //debug: check the correctness of current Board after RPC
+//            array2D.check()
             //iterate all cells
             array2D.update()
-//            //check the correctness
-//            array2D.check()
+
 
             array2D.swap_ref()
 //            waitRounds(1)
