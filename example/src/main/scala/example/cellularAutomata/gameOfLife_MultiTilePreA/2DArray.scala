@@ -40,8 +40,8 @@ class Array2D(val width: Int, val height: Int) {
   }
 
   def packageMsg(): Vector[Vector[Boolean]] = {
-    val topEdge: Vector[Boolean] = currentBoard(1).slice(1,width).toVector
-    val bottomEdge:Vector[Boolean] = currentBoard(height).slice(1,width).toVector
+    val topEdge: Vector[Boolean] = currentBoard(1).slice(1,width+1).toVector
+    val bottomEdge:Vector[Boolean] = currentBoard(height).slice(1,width+1).toVector
     val leftEdge: Vector[Boolean] = (1 until currentBoard.length - 1).map(row => currentBoard(row)(1)).toVector
     val rightEdge: Vector[Boolean] = (1 until currentBoard.length - 1).map(row => currentBoard(row)(width)).toVector
 
@@ -77,7 +77,7 @@ class Array2D(val width: Int, val height: Int) {
           println("Direction 1 Vector length ERROR!")
         }
         for (row <- 1 until state.length+1) {
-          currentBoard(row)(0) = state(row)
+          currentBoard(row)(0) = state(row-1)
         }
       }
 
@@ -91,10 +91,10 @@ class Array2D(val width: Int, val height: Int) {
         //from the neighbor's  bottom Edge
         //topEdge
         if (state.length != width) {
-          println("Direction 3 Vector length ERROR!")
+          println(s"Direction 3 Vector length ${state.length} ERROR!")
         }
         for (col <- 1 until state.length+1) {
-          currentBoard(0)(col) = state(col)
+          currentBoard(0)(col) = state(col-1)
         }
       }
 
@@ -102,10 +102,10 @@ class Array2D(val width: Int, val height: Int) {
         //from the neighbor's top Edge
         //bottomEdge
         if (state.length != width) {
-          println("Direction 4 Vector length ERROR!")
+          println(s"Direction 4 Vector length ${state.length} ERROR!")
         }
         for (col <- 1 until state.length + 1) {
-          currentBoard(height+1)(col) = state(col)
+          currentBoard(height+1)(col) = state(col-1)
         }
       }
 
@@ -122,7 +122,7 @@ class Array2D(val width: Int, val height: Int) {
           println("Direction 6 Vector length ERROR!")
         }
         for (row <- 1 until state.length + 1) {
-          currentBoard(row)(width+1) = state(row)
+          currentBoard(row)(width+1) = state(row-1)
         }
       }
 

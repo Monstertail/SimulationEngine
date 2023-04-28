@@ -109,6 +109,13 @@ class gameOLTest extends FlatSpec {
       //      Simulate.log = null
       val snapshot1 = API.Simulate(agents, totalTurns)
     }
+    case 12 => {
+      //tile layout 2DA OR
+      val agents = generated.example.gameOfLifeMultiTilePreA.InitData(width, height, col, row)
+      //      API.OptimizationConfig.mergedWorker()
+      //      Simulate.log = null
+      val snapshot1 = API.Simulate(agents, totalTurns)
+    }
 
   }
 
