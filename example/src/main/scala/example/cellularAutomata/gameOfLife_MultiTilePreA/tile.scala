@@ -37,7 +37,10 @@ class Tile(val width: Int, val height: Int,val array2D: Array2D ) extends Actor 
                 index =index+ 1
             }
 
+//            array2D.check()
             waitAndReply(1)
+            //check the correctness of current Board after RPC
+            array2D.check()
             //iterate all cells
             array2D.update()
 //            //check the correctness

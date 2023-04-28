@@ -8,7 +8,7 @@ import scala.reflect.ClassTag
 import cloudcity.lib.Graph.GenerateGraph.Torus2DGraph
 object MainInit {
   val liftedMain = meta.classLifting.liteLift {
-    def apply(width: Int, height: Int, row:Int, col:Int): IndexedSeq[Actor] = {
+    def apply(width: Int, height: Int, col:Int, row:Int): IndexedSeq[Actor] = {
       val totalComp: Int = row*col
 
       val tiles = Range(0, totalComp).map(i => {

@@ -204,7 +204,8 @@ class Array2D(val width: Int, val height: Int) {
   }
 
  def check():Unit={
-    printBooleanArray(newBoard)
+//    printBooleanArray(newBoard)
+   printBooleanArray(currentBoard)
   }
 
  def printBooleanArray(arr: Array[Array[Boolean]]): Unit = {
