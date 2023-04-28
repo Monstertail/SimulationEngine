@@ -45,7 +45,7 @@ class Array2D(val width: Int, val height: Int) {
     val rightEdge: Vector[Boolean] = currentBoard.map(row => row(row.length-1)).toVector
     val topLeft:Vector[Boolean] = Vector(currentBoard(0)(0))
     val topRight:Vector[Boolean] = Vector(currentBoard(0)(width-1))
-    val bottomLeft:Vector[Boolean] = Vector(currentBoard(height-1)(1))
+    val bottomLeft:Vector[Boolean] = Vector(currentBoard(height-1)(0))
     val bottomRight:Vector[Boolean] = Vector(currentBoard(height-1)(width-1))
 
     Vector(topLeft,leftEdge,bottomLeft,topEdge,bottomEdge,topRight,rightEdge,bottomRight).reverse

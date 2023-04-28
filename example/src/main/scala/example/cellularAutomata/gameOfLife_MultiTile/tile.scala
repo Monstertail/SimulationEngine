@@ -22,8 +22,8 @@ class Tile(val width: Int, val height: Int,val array2D: Array2D ) extends Actor 
   }
 
     def main(): Unit = {
-      println("agent id " + id )
-      println(connectedAgents.map(_.id))
+//      println("agent id " + id )
+//      println(connectedAgents.map(_.id))
 
         while (true) {
             handleRPC()
