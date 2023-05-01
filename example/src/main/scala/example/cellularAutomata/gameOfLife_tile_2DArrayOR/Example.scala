@@ -7,24 +7,28 @@ import scala.util.Random
 import scala.reflect.ClassTag
 object MainInit {
   val liftedMain = meta.classLifting.liteLift {
-    def apply(width: Int, height: Int): List[Actor] = {
+    def apply(width: Int, height: Int): IndexedSeq[Actor] = {
       val totalComp: Int = 1
-//      implicit val ct: ClassTag[Boolean] = scala.reflect.classTag[Boolean]
-//      var currentBoard: Array[Array[Boolean]] = Array.ofDim[Boolean](height, width)(ct)
-//      var newBoard: Array[Array[Boolean]] = Array.ofDim[Boolean](height, width)(ct)
 
-//      val random = new Random()
-//      for (i <- 0 until height; j <- 0 until width) {
-//        currentBoard(i)(j) = random.nextBoolean()
-//      }
-      val array2D= new example.gameOfLifeTile2DArrayOR.Array2D(width, height)
-      array2D.init()
+//      val array2D= new example.gameOfLifeTile2DArrayOR.Array2D(width, height)
+//      array2D.init()
+//
+//      val tile = new Tile(width, height, array2D)
+//
+//      val components = (1 to totalComp).map(x => tile).toList
+//
+//      components
 
-      val tile = new Tile(width, height, array2D)
+      val tiles = Range(0, totalComp).map(i => {
+        val array2D = new example.gameOfLifeTile2DArrayOR.Array2D(width, height)
+        array2D.init()
+        val tile = new Tile(width, height, array2D)
+        // Not strictly necessary. Just to be sure.
+        tile.id = i
+        tile
+      })
+      tiles
 
-      val components = (1 to totalComp).map(x => tile).toList
-
-      components
     }
   }
 }
