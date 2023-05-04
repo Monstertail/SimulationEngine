@@ -10,6 +10,8 @@ import com.fasterxml.jackson.annotation.{JsonTypeInfo, JsonSubTypes, JsonTypeNam
     new JsonSubTypes.Type(value = classOf[TimedMessage], name = "timedMessage")))
 class Message extends JsonSerializable {
   var value: Double = 0
+  var encode: Int=0
+  var state:Vector[Boolean]=_
 }
 
 @JsonTypeName("doubleArrayMessage")
