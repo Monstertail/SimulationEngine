@@ -12,15 +12,15 @@ import scala.collection.mutable.ListBuffer
 
 //The access and modification time complexity of ListBuffer is $O(n)$, while array is only O(1)
 @lift
-class Tile(val width: Int, val height: Int,val array2D: Array2D ) extends Actor {
+class Tile(val LArray2D: LocalArray2D[Boolean],val C2DA: Array2DCal ) extends Actor {
 
-  @transparencyPropagating
-  def tell(state: Vector[Boolean], direction: Int, from: Int): Unit = {
-    // shall we set return type to Unit or Vector[boolean]?
-    array2D.decodeMsg(state, direction, from, id.toInt)
-//    println("id"+id+"from:" + from)
-
-  }
+//  @transparencyPropagating
+//  def tell(state: Vector[Boolean], direction: Int, from: Int): Unit = {
+//    // shall we set return type to Unit or Vector[boolean]?
+//    array2D.decodeMsg(state, direction, from, id.toInt)
+////    println("id"+id+"from:" + from)
+//
+//  }
 
     def main(): Unit = {
 //      println("agent id " + id )
@@ -40,10 +40,9 @@ class Tile(val width: Int, val height: Int,val array2D: Array2D ) extends Actor 
 //            }
 
           //msg passing
-            var encode=0
-            array2D.topoId.foreach{v=> sendMessage(v.toInt,array2D.encodeMsg(encode)
-            )
-              encode =encode+ 1}
+
+            LArray2D.Atopo.foreach{v=> sendMessage(v.id,LArray2D.tbs(LArray2D,v.asInstanceOf[Tile].LArray2D)
+            )}
 
             // Messages are sent and arrive at the beginning of the next round
             waitRounds(1)
@@ -51,15 +50,15 @@ class Tile(val width: Int, val height: Int,val array2D: Array2D ) extends Actor 
 
 
             while (m.isDefined) {
-              array2D.decodeMsg(m)
+              C2DA.decodeMsg(m.get)
               m = receiveMessage()
             }
             //iterate all cells
-            array2D.update()
+          C2DA.update()
 //            //check the correctness
 //            array2D.check()
 
-            array2D.swap_ref()
+          C2DA.swap_ref()
 //            waitRounds(1)
         }
     }

@@ -10,10 +10,7 @@ import squid.quasi.lift
 import scala.util.Random
 import scala.reflect.ClassTag
 
-class Pair(val x: Int, val y: Int){
-  val r_index=x
-  val c_index=y
-}
+
 
 //define MsgType
 //class myMsgType extends Message{
@@ -21,11 +18,14 @@ class Pair(val x: Int, val y: Int){
 //}
 
 //@lift
-class Array2D(val width: Int, val height: Int,val global_Tid:Pair) extends AgentTopo[Pair] {
+class Array2DCal(val L2DA:LocalArray2D[Boolean]) {
 
   var tileNO: Int = _
-  var currentBoard: Array[Array[Boolean]] = Array.ofDim[Boolean](height, width)
-  var newBoard: Array[Array[Boolean]] = Array.ofDim[Boolean](height, width)
+  val width=L2DA.w
+  val height=L2DA.h
+
+//  var currentBoard: Array[Array[Boolean]] = Array.ofDim[Boolean](height, width)
+//  var newBoard: Array[Array[Boolean]] = Array.ofDim[Boolean](height, width)
 
   //store neighbor information
   var topEdge: Array[Boolean]=Array.ofDim[Boolean]( width)
@@ -46,70 +46,51 @@ class Array2D(val width: Int, val height: Int,val global_Tid:Pair) extends Agent
   def init(tN:Int): Unit = {
     val random = new Random()
     for (i <- 0 until height; j <- 0 until width) {
-      currentBoard(i)(j) = random.nextBoolean()
+      L2DA.currentBoard(i)(j) = random.nextBoolean()
     }
     tileNO=tN
   }
 
 
-  def encodeMsg(encode:Int): Message = {
-    val pack=new packMsg
-    pack.tbs(encode, new Pair(0, 0), new Pair(0, 0))
-
-  }
-
-
-
-  def decodeMsg(m:Message): Unit = {
-
-    //debug
-//    else{
-//
-//      println(s"direction $direction, length: ${state.length} from tile $from for tile $id with 2DArray of $tileNO")
-//    }
-     m.encode match{
-      case 0=>{
-        //from the neighbor's bottom right
-        topLeft=m.state(0)
-
-      }
-      case 1=>{
-        //from the neighbor's right
-        leftEdge=m.state.toArray
+  def decodeMsg(m: Message): Unit = {
+    m match {
+      case RowMsgGoUp(arr: Array[_]) => {
+        bottomEdge = arr.asInstanceOf[Array[Boolean]]
       }
 
-      case 2=>{
-        //from the neighbor's  top Right
-        bottomLeft=m.state(0)
+      case RowMsgGoDown(arr: Array[_]) => {
+        topEdge = arr.asInstanceOf[Array[Boolean]]
       }
 
-      case 3=>{
-        //from the neighbor's  bottom Edge
-        topEdge=m.state.toArray
+      case ColMsgGoRight(arr: Array[_]) => {
+        leftEdge = arr.asInstanceOf[Array[Boolean]]
       }
 
-      case 4=>{
-        //from the neighbor's top Edge
-        bottomEdge=m.state.toArray
+      case ColMsgGoLeft(arr: Array[_]) => {
+        rightEdge = arr.asInstanceOf[Array[Boolean]]
       }
 
-      case 5=>{
-        //from the neighbor's bottom left
-        topRight=m.state(0)
+      case DiagMsgTopLeft(v:_) => {
+        bottomRight = v.asInstanceOf[Boolean]
       }
 
-      case 6=>{
-        //from the neighbor's left Edge
-        rightEdge=m.state.toArray
+      case DiagMsgTopRight(v: _) => {
+        bottomLeft = v.asInstanceOf[Boolean]
       }
 
-      case 7=>{
-        //from the neighbor's topleft
-        bottomRight=m.state(0)
+      case DiagMsgBottomLeft(v: _) => {
+        topRight = v.asInstanceOf[Boolean]
       }
+
+      case DiagMsgBottomRight(v: _) => {
+        topLeft = v.asInstanceOf[Boolean]
+      }
+
+
     }
-
   }
+
+
 
   def locationQuery(r:Int,c:Int): Boolean = {
       if(r== -1){
@@ -138,7 +119,7 @@ class Array2D(val width: Int, val height: Int,val global_Tid:Pair) extends Agent
         }else if(c==width){
           return rightEdge(r)
         } else{
-          return currentBoard(r)(c)
+          return L2DA.currentBoard(r)(c)
         }
       }
   }
@@ -169,17 +150,17 @@ class Array2D(val width: Int, val height: Int,val global_Tid:Pair) extends Agent
         }
 
         // apply the game of life rules to determine the next state
-        if (currentBoard(i)(j)) {
+        if (L2DA.currentBoard(i)(j)) {
           if (aliveNeighbors == 2 || aliveNeighbors == 3) {
-            newBoard(i)(j) = true
+            L2DA.newBoard(i)(j) = true
           } else {
-            newBoard(i)(j) = false
+            L2DA.newBoard(i)(j) = false
           }
         } else {
           if (aliveNeighbors == 3) {
-            newBoard(i)(j) = true
+            L2DA.newBoard(i)(j) = true
           } else {
-            newBoard(i)(j) = false
+            L2DA.newBoard(i)(j) = false
           }
         }
 
@@ -193,16 +174,16 @@ class Array2D(val width: Int, val height: Int,val global_Tid:Pair) extends Agent
   // -------------------------swap reference for double buffering
   def swap_ref():Unit={
     // Swap the buffers
-    val temp = currentBoard
+    val temp = L2DA.currentBoard
     // check if two references point to the same object in memory
     // If isSameArray is false, then a new array was created and the pointers were not simply swapped.
-    val isSameArray = currentBoard eq temp
+    val isSameArray = L2DA.currentBoard eq temp
 
-    currentBoard = newBoard
-    val CNSameArray = currentBoard eq newBoard
+    L2DA.currentBoard = L2DA.newBoard
+    val CNSameArray = L2DA.currentBoard eq L2DA.newBoard
 
-    newBoard = temp
-    val NTSameArray = temp eq newBoard
+    L2DA.newBoard = temp
+    val NTSameArray = temp eq L2DA.newBoard
 
     if (!(isSameArray && CNSameArray && NTSameArray)) {
       println(s"ERROR:two references point to the different objects in memory!")
@@ -212,7 +193,7 @@ class Array2D(val width: Int, val height: Int,val global_Tid:Pair) extends Agent
 
   //-------------------------------correctness test
  def check():Unit={
-    printBooleanArray(newBoard)
+    printBooleanArray(L2DA.newBoard)
   }
 
  def printBooleanArray(arr: Array[Array[Boolean]]): Unit = {
@@ -226,72 +207,7 @@ class Array2D(val width: Int, val height: Int,val global_Tid:Pair) extends Agent
     }
  }
 //---------------------------generate Msgs to be sent
-//  class rowMsg extends super.Msg {
-//    override def tbs(id1: Pair, id2: Pair): Message = {
-//      val msg = new Message()
-//      // perform some operations using id1 and id2
-//      msg.encode=1
-//      msg.value=if (currentBoard(id1.r_index)(id1.c_index)) 1 else 0
-//      msg
-//    }
-//  }
 
-  class packMsg extends super.Msg {
-    override def tbs(encode:Int,index1:Pair,dst:Pair): Message = {
-      val msg = new Message()
-      // perform some operations using id1 and id2
-      msg.encode = encode
-//      msg.value = if (currentBoard(index1.r_index)(index1.c_index)) 1 else 0
-      encode match {
-        case 0 => {
-          //src: bottom Right dst: top Left
-          msg.state=Vector(currentBoard(height-1)(width-1))
-        }
-
-        case 1 => {
-          //src: rightEdge
-          msg.state=currentBoard.map(row => row(row.length-1)).toVector
-
-        }
-
-        case 2=>{
-          //src: topRight
-          msg.state=Vector(currentBoard(0)(width-1))
-
-        }
-
-        case 3=>{
-          // src: bottomEdge
-          msg.state=currentBoard(height-1).toVector
-
-        }
-
-        case 4=>{
-          //src:topEdge
-          msg.state=currentBoard(0).toVector
-        }
-
-        case 5=>{
-          //src:bottomLeft
-          msg.state=Vector(currentBoard(height-1)(0))
-        }
-
-        case 6=>{
-          //src: leftEdge
-          msg.state=currentBoard.map(row => row(0)).toVector
-        }
-
-        case 7=>{
-          //src: topleft
-          msg.state= Vector(currentBoard(0)(0))
-        }
-
-
-      }
-
-      msg
-    }
-  }
 
 
 }

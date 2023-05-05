@@ -5,15 +5,14 @@ import meta.runtime.Actor.AgentId
 import meta.runtime.{Actor, Message}
 
 class AgentTopo[T]{
-  def topo(a:Actor):IndexedSeq[Actor]= _
-  var  topoId :Iterable[AgentId] = List()
+  //To check, topo requires another type signature
+  var Atopo:IndexedSeq[Actor]= _
+  var Ctopo:IndexedSeq[AgentTopo[T]]=_
 
-  class Msg{
-    def tbs(encode:Int,Sid:T,Did:T): Message = {
-      val msg = new Message()
-      msg
-    }
-  }
+//  def topo():IndexedSeq[AgentTopo[T]]= _
+
+  def tbs(Sid:T,Did:T) : Message = ???
+
 
 
 }
