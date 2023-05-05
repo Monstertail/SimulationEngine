@@ -64,6 +64,26 @@ object Torus2DGraph extends GenerateGraph {
     }
 }
 
+object NonWrapping2DGraph extends GenerateGraph {
+    def apply(width: Int, height: Int, startingIndex: Int = 0): Map[Long, IndexedSeq[Long]] = {
+        Range(0, width * height).map(index => {
+            val x = index % width
+            val y = index / width
+
+            val neighbors = for {
+                i <- -1 to 1
+                j <- -1 to 1
+                if !(i == 0 && j == 0)
+                    dx = x + i
+                    dy = y + j
+                if dx >= 0 && dx < width && dy >= 0 && dy < height
+            } yield dy * width + dx
+
+            (index.toLong + startingIndex, neighbors.map(n => n.toLong + startingIndex))
+        }).toMap
+    }
+}
+
 object BipartiteGraph extends GenerateGraph {
     def apply(set1Size: Int, set2Size: Int, startingIndex: Int = 0): Map[Long, Iterable[Long]] = {        
         (Range(startingIndex, set1Size + startingIndex).map(i => {
