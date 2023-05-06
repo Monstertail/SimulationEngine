@@ -9,7 +9,7 @@ import squid.quasi.lift
 
 import scala.util.Random
 import scala.reflect.ClassTag
-
+import  scala.collection.immutable.Vector
 
 
 //define MsgType
@@ -21,8 +21,8 @@ import scala.reflect.ClassTag
 class Array2DCal(val L2DA:LocalArray2D[Boolean]) {
 
   var tileNO: Int = _
-  val width=L2DA.w
-  val height=L2DA.h
+  val width=L2DA.width
+  val height=L2DA.height
 
 //  var currentBoard: Array[Array[Boolean]] = Array.ofDim[Boolean](height, width)
 //  var newBoard: Array[Array[Boolean]] = Array.ofDim[Boolean](height, width)
@@ -52,37 +52,39 @@ class Array2DCal(val L2DA:LocalArray2D[Boolean]) {
   }
 
 
-  def decodeMsg(m: Message): Unit = {
+  def decodeMsg(m: TopoMsg): Unit = {
     m match {
-      case RowMsgGoUp(arr: Array[_]) => {
-        bottomEdge = arr.asInstanceOf[Array[Boolean]]
+      case RowMsgTop(arr) => {
+//        println(arr)
+//        println(arr.toVector)
+        bottomEdge = arr.toVector.asInstanceOf[Vector[Boolean]].toArray
       }
 
-      case RowMsgGoDown(arr: Array[_]) => {
-        topEdge = arr.asInstanceOf[Array[Boolean]]
+      case RowMsgBottom(arr) => {
+        topEdge = arr.toVector.asInstanceOf[Vector[Boolean]].toArray
       }
 
-      case ColMsgGoRight(arr: Array[_]) => {
-        leftEdge = arr.asInstanceOf[Array[Boolean]]
+      case ColMsgRight(arr) => {
+        leftEdge = arr.toVector.asInstanceOf[Vector[Boolean]].toArray
       }
 
-      case ColMsgGoLeft(arr: Array[_]) => {
-        rightEdge = arr.asInstanceOf[Array[Boolean]]
+      case ColMsgLeft(arr) => {
+        rightEdge = arr.toVector.asInstanceOf[Vector[Boolean]].toArray
       }
 
-      case DiagMsgTopLeft(v:_) => {
+      case DiagMsgTopLeft(v) => {
         bottomRight = v.asInstanceOf[Boolean]
       }
 
-      case DiagMsgTopRight(v: _) => {
+      case DiagMsgTopRight(v) => {
         bottomLeft = v.asInstanceOf[Boolean]
       }
 
-      case DiagMsgBottomLeft(v: _) => {
+      case DiagMsgBottomLeft(v) => {
         topRight = v.asInstanceOf[Boolean]
       }
 
-      case DiagMsgBottomRight(v: _) => {
+      case DiagMsgBottomRight(v) => {
         topLeft = v.asInstanceOf[Boolean]
       }
 

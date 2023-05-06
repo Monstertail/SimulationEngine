@@ -4,13 +4,13 @@ import meta.runtime.Message
 
 sealed trait TopoMsg extends Message
 
-case class RowMsgGoUp[T](v:Array[T]) extends TopoMsg
+case class RowMsgTop[T](v:IndexedSeq[T]) extends TopoMsg
 
-case class RowMsgGoDown[T](v:Array[T]) extends TopoMsg
+case class RowMsgBottom[T](v:IndexedSeq[T]) extends TopoMsg
 
-case class ColMsgGoLeft[T](v:Array[T]) extends TopoMsg
+case class ColMsgLeft[T](v:IndexedSeq[T]) extends TopoMsg
 
-case class ColMsgGoRight[T](v:Array[T]) extends TopoMsg
+case class ColMsgRight[T](v:IndexedSeq[T]) extends TopoMsg
 
 case class DiagMsgTopLeft[T](v:T) extends TopoMsg
 

@@ -46,11 +46,11 @@ class Tile(val LArray2D: LocalArray2D[Boolean],val C2DA: Array2DCal ) extends Ac
 
             // Messages are sent and arrive at the beginning of the next round
             waitRounds(1)
-            var m: Option[Message] = receiveMessage()
+            var m = receiveMessage()
 
 
             while (m.isDefined) {
-              C2DA.decodeMsg(m.get)
+              C2DA.decodeMsg(m.get.asInstanceOf[TopoMsg])
               m = receiveMessage()
             }
             //iterate all cells

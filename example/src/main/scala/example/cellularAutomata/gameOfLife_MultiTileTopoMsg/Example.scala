@@ -1,6 +1,8 @@
 package example
 package gameOfLifeMultiTileTopoMsg
 
+import cloudcity.lib.Graph.GenerateGraph.NonWrapping2DGraph
+
 import scala.collection.mutable.{Map => MutMap}
 //import lib.Graph.Torus2DGraph
 import scala.util.Random
@@ -12,7 +14,7 @@ object MainInit {
       val totalComp: Int = row*col
 
       val tiles = Range(0, totalComp).map(i => {
-        val L2DA = new example.gameOfLifeMultiTileTopoMsg.LocalArray2D[Boolean](width, height, new Pair((i / col)*height, (i % col)*width))
+        val L2DA = new example.gameOfLifeMultiTileTopoMsg.LocalArray2D[Boolean](width, height, new example.gameOfLifeMultiTileTopoMsg.gridCoordinate((i / col)*height, (i % col)*width))
         val C2DA=new example.gameOfLifeMultiTileTopoMsg.Array2DCal(L2DA)
         val tile = new Tile(L2DA,C2DA)
         // Not strictly necessary. Just to be sure.
@@ -22,13 +24,13 @@ object MainInit {
       })
 
       // 2D space
-      val graph: Map[Long, Iterable[Long]] = Torus2DGraph(col, row)
+      val graph: Map[Long, Iterable[Long]] = NonWrapping2DGraph(col, row)
       println(s"tile 0's neighbor: ${graph(0)}")
       tiles.zipWithIndex.map(c => {
 //        c._1.connectedAgents = graph(c._2).map(i => tiles(i.toInt)).distinct
-        c._1.LArray2D.Atopo = graph(c._2).map(i => tiles(i.toInt)).distinct
+        c._1.LArray2D.Atopo = graph(c._2).map(i => tiles(i.toInt)).toIndexedSeq
         //record topo for the neighbor components
-        c._1.LArray2D.Ctopo=graph(c._2).map(i => tiles(i.toInt).LArray2D).distinct
+//        c._1.LArray2D.Ctopo=graph(c._2).map(i => tiles(i.toInt).LArray2D)
 
       })
 
