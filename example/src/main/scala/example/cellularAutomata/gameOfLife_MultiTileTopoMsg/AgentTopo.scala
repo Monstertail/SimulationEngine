@@ -13,7 +13,10 @@ class AgentTopo[T]{
 //  def topo():IndexedSeq[AgentTopo[T]]= _
 
   def tbs(Sid:T,Did:T) : TopoMsg = ???
+  def processMessage[V](m:Message,c:AgentTopo[T]):V = ???
 
+  def updateMessage[V](c:AgentTopo[T] ,buffer:Iterable[V]):AgentTopo[T] = ???
 
+//  def step(c:AgentTopo[T]):AgentTopo[T] = ???
 
 }

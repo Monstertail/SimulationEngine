@@ -125,6 +125,7 @@ class Array2DCal(val L2DA:LocalArray2D[Boolean]) {
         }
       }
   }
+
 // -------------------------step function()
   def update(): Unit = {
     i = 0
