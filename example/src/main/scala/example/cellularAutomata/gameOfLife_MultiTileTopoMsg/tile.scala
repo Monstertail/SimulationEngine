@@ -12,7 +12,7 @@ import scala.collection.mutable.ListBuffer
 
 //The access and modification time complexity of ListBuffer is $O(n)$, while array is only O(1)
 @lift
-class Tile(val LArray2D: LocalArray2D[Boolean],val C2DA: Array2DCal ) extends Actor {
+class Tile(val LArray2D: LocalArray2D[Boolean] ) extends Actor {
 
 //  @transparencyPropagating
 //  def tell(state: Vector[Boolean], direction: Int, from: Int): Unit = {
@@ -46,20 +46,20 @@ class Tile(val LArray2D: LocalArray2D[Boolean],val C2DA: Array2DCal ) extends Ac
 
             // Messages are sent and arrive at the beginning of the next round
             waitRounds(1)
-            var m = receiveMessage()
-
-
-            while (m.isDefined) {
-              C2DA.decodeMsg(m.get.asInstanceOf[TopoMsg])
-              m = receiveMessage()
-            }
-            //iterate all cells
-          C2DA.update()
-//            //check the correctness
-//            array2D.check()
-
-          C2DA.swap_ref()
-//            waitRounds(1)
+//            var m = receiveMessage()
+//
+//
+//            while (m.isDefined) {
+//              C2DA.decodeMsg(m.get.asInstanceOf[TopoMsg])
+//              m = receiveMessage()
+//            }
+//            //iterate all cells
+//          C2DA.update()
+////            //check the correctness
+////            array2D.check()
+//
+//          C2DA.swap_ref()
+////            waitRounds(1)
         }
     }
 }

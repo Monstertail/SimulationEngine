@@ -2,7 +2,9 @@ package example
 package gameOfLifeMultiTileTopoMsg
 
 import meta.runtime.Message
+
 import scala.reflect.ClassTag
+import scala.util.Random
 
 
 class gridCoordinate(val x: Int, val y: Int){
@@ -35,6 +37,7 @@ class LocalArray2D[V: scala.reflect.ClassTag](w:Int,h:Int,gid:gridCoordinate) ex
     var rightEdge: Array[V] = Array.ofDim[V](h)
   }
 
+
   def tbs(c1:LocalArray2D[V],c2:LocalArray2D[V]): TopoMsg = {
     (c1.global_id.c_index, c1.global_id.r_index, c2.global_id.c_index, c2.global_id.r_index) match {
       case (c1c, c1r, c2c, c2r) if c1c == c2c && c2r+c2.height == c1r  =>
@@ -58,19 +61,19 @@ class LocalArray2D[V: scala.reflect.ClassTag](w:Int,h:Int,gid:gridCoordinate) ex
 
   }
 
-  def processMessage(m:Message,c:LocalArray2D[V]):(Int,Vector[V]) ={
+  def processMessage(m:TopoMsg,c:LocalArray2D[V]):(Int,Vector[V]) ={
     m match {
       case DiagMsgBottomRight(v) => {
-        (0,v.asInstanceOf[Vector[V]])
+        (0,Vector(v.asInstanceOf[V]))
       }
       case DiagMsgBottomLeft(v) => {
-        (1, v.asInstanceOf[Vector[V]])
+        (1, Vector(v.asInstanceOf[V]))
       }
       case DiagMsgTopRight(v) => {
-        (2, v.asInstanceOf[Vector[V]])
+        (2, Vector(v.asInstanceOf[V]))
       }
       case DiagMsgTopLeft(v) => {
-        (3, v.asInstanceOf[Vector[V]])
+        (3, Vector(v.asInstanceOf[V]))
       }
       case RowMsgBottom(v) => {
         (4, v.toVector.asInstanceOf[Vector[V]])

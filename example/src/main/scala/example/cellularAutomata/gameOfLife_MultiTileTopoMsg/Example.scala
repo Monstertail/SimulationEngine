@@ -15,8 +15,14 @@ object MainInit {
 
       val tiles = Range(0, totalComp).map(i => {
         val L2DA = new example.gameOfLifeMultiTileTopoMsg.LocalArray2D[Boolean](width, height, new example.gameOfLifeMultiTileTopoMsg.gridCoordinate((i / col)*height, (i % col)*width))
-        val C2DA=new example.gameOfLifeMultiTileTopoMsg.Array2DCal(L2DA)
-        val tile = new Tile(L2DA,C2DA)
+//        val C2DA=new example.gameOfLifeMultiTileTopoMsg.Array2DCal(L2DA)
+        val random = new Random()
+        for (i <- 0 until height; j <- 0 until width) {
+          L2DA.currentBoard(i)(j) = random.nextBoolean()
+        }
+
+        val tile = new Tile(L2DA)
+
         // Not strictly necessary. Just to be sure.
 //        tile.array2D.topo(tile)
         tile.id = i
