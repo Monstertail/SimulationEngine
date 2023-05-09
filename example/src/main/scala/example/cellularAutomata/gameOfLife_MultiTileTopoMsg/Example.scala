@@ -20,7 +20,6 @@ object MainInit {
         for (i <- 0 until height; j <- 0 until width) {
           L2DA.currentBoard(i)(j) = random.nextBoolean()
         }
-
         val tile = new Tile(L2DA)
         tile.id = i
         tile
