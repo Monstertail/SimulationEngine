@@ -26,7 +26,6 @@ object MainInit {
         tile.id = i
         tile
       })
-
       // 2D space
       val graph: Map[Long, Iterable[Long]] = NonWrapping2DGraph(col, row)
       println(s"tile 0's neighbor: ${graph(0)}")
