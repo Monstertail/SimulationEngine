@@ -21,9 +21,9 @@ class LocalArray2D[V: scala.reflect.ClassTag](w:Int,h:Int,gid:gridCoordinate) ex
   val width=w
   val height=h
   val global_id =gid
-  var currentBoard: Array[Array[V]] = Array.ofDim[V](w, h)
+  var currentBoard: Array[Array[V]] = Array.ofDim[V](h, w)
   //newBoard is used to store the updated states after step function for every cell
-  var newBoard: Array[Array[V]] = Array.ofDim[V](w, h)
+  var newBoard: Array[Array[V]] = Array.ofDim[V](h, w)
 
 
 
@@ -31,7 +31,7 @@ class LocalArray2D[V: scala.reflect.ClassTag](w:Int,h:Int,gid:gridCoordinate) ex
     (c1.global_id.c_index, c1.global_id.r_index, c2.global_id.c_index, c2.global_id.r_index) match {
       case (c1c, c1r, c2c, c2r) if c1c == c2c && c2r+c2.height == c1r  =>
         RowMsgTop(c1.currentBoard(0))
-      case (c1c, c1r, c2c, c2r) if c1c == c2c && c2r == c1r + c1.width =>
+      case (c1c, c1r, c2c, c2r) if c1c == c2c && c2r == c1r + c1.height =>
         RowMsgBottom(c1.currentBoard(c1.height - 1))
       case (c1c, c1r, c2c, c2r) if c1r == c2r && c1c + c1.width == c2c =>
         ColMsgRight(c1.currentBoard.map(row => row(row.length - 1)).toVector)
@@ -93,7 +93,7 @@ class LocalArray2D[V: scala.reflect.ClassTag](w:Int,h:Int,gid:gridCoordinate) ex
     for (i<-0 until  height) {
 
       for (j<-0 until  width) {
-//      //debug performance by lamda function: 1600 ms
+//      //--------------------------------debug performance by lamda function: 1600 ms
 //      val neighbors = (-1 to 1).flatMap { ni =>
 //        (-1 to 1).flatMap { nj =>
 //          if (ni == 0 && nj == 0) {
