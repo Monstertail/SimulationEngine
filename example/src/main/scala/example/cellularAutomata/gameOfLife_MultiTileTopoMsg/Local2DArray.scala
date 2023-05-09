@@ -5,7 +5,7 @@ import meta.runtime.Message
 
 import scala.reflect.ClassTag
 import scala.util.Random
-
+import scala.collection.mutable.ListBuffer
 
 class gridCoordinate(val x: Int, val y: Int){
   val r_index=x
@@ -25,17 +25,6 @@ class LocalArray2D[V: scala.reflect.ClassTag](w:Int,h:Int,gid:gridCoordinate) ex
   //newBoard is used to store the updated states after step function for every cell
   var newBoard: Array[Array[V]] = Array.ofDim[V](w, h)
 
-  //padding
-  object padding{
-    var topLeft: V = _
-    var topRight: V= _
-    var bottomLeft: V= _
-    var bottomRight: V= _
-    var topEdge: Array[V]= Array.ofDim[V](w)
-    var bottomEdge: Array[V]= Array.ofDim[V](w)
-    var leftEdge: Array[V] = Array.ofDim[V](h)
-    var rightEdge: Array[V] = Array.ofDim[V](h)
-  }
 
 
   def tbs(c1:LocalArray2D[V],c2:LocalArray2D[V]): TopoMsg = {
@@ -96,29 +85,100 @@ class LocalArray2D[V: scala.reflect.ClassTag](w:Int,h:Int,gid:gridCoordinate) ex
 
   }
 
-  def updateMessage(c: LocalArray2D[V], buffer: Iterable[(Int,Vector[V])]): LocalArray2D[V]= {
 
-    buffer.foreach {
-      case (index, vec) => index match {
-        case 0 => c.padding.topLeft = vec(0)
-        case 1 => c.padding.topRight = vec(0)
-        case 2 => c.padding.bottomLeft = vec(0)
-        case 3 => c.padding.bottomRight = vec(0)
-        case 4 => c.padding.topEdge =  vec.toArray
-        case 5 => c.padding.bottomEdge=vec.toArray
-        case 6 => c.padding.leftEdge=vec.toArray
-        case 7 => c.padding.rightEdge=vec.toArray
-        case _ => println("ERROR! Unexpected message type!")
+  def updateComponent(buffer:Iterable[(Int,Vector[V])],perCellAct:(V,Iterable[V])=>V):Unit = {
+
+    val receiveMessage=buffer
+
+    for (i<-0 until  height) {
+
+      for (j<-0 until  width) {
+        val  neighbors= ListBuffer[V]()
+        for (ni<- -1 to  1) {
+
+          for (nj <- -1 to 1) {
+            if (!(ni == 0 && nj == 0)) {
+              //check the location of neighbors and update
+              //row index of the neighbor
+              val r = i + ni
+              //column index of the neighbor
+              val c = j + nj
+
+              if (r == -1) {
+                if (c == -1) {
+                  //topLeft
+                  neighbors+=receiveMessage.find { case (i, v) => i == 0 }.map { case (i, v) => v(0) }
+                }
+                else if (c == width) {
+                  //topRight
+                  neighbors+=receiveMessage.find { case (i, v) => i == 1 }.map { case (i, v) => v(0) }
+                }
+
+                else {
+                  //topEdge(c)
+                  neighbors+=receiveMessage.find { case (i, v) => i == 4 }.map { case (i, v) => v(c) }
+                }
+              } else if (r == height) {
+                if (c == -1) {
+                  // bottomLeft
+                  neighbors+=receiveMessage.find { case (i, v) => i == 2 }.map { case (i, v) => v(0) }
+
+                }
+                else if (c == width) {
+                  //bottomRight
+                  neighbors+=receiveMessage.find { case (i, v) => i == 3 }.map { case (i, v) => v(0) }
+                }
+                else {
+                  //bottomEdge(c)
+                  neighbors+=receiveMessage.find { case (i, v) => i == 5 }.map { case (i, v) => v(c) }
+                }
+              } else {
+                if (c == -1) {
+                  //leftEdge(r)
+                  neighbors+=receiveMessage.find { case (i, v) => i == 6 }.map { case (i, v) => v(r) }
+                } else if (c == width) {
+                  //rightEdge(r)
+                  neighbors+=receiveMessage.find { case (i, v) => i == 7 }.map { case (i, v) => v(r) }
+                } else {
+                  neighbors+= currentBoard(r)(c)
+                }
+              }
+
+            }
+
+          }
+
+        }
+
+        // step function:apply the game of life rules to determine the next state
+
+        newBoard(i)(j)=perCellAct(currentBoard(i)(j),neighbors)
+
       }
+
     }
-    c
+
+    // swap the reference
+
+    val temp = currentBoard
+    // check if two references point to the same object in memory
+    // If isSameArray is false, then a new array was created and the pointers were not simply swapped.
+    val isSameArray = currentBoard eq temp
+
+    currentBoard = newBoard
+    val CNSameArray = currentBoard eq newBoard
+
+    newBoard = temp
+    val NTSameArray = temp eq newBoard
+
+    if (!(isSameArray && CNSameArray && NTSameArray)) {
+      println(s"ERROR:two references point to the different objects in memory!")
+    }
 
   }
 
 
-//  def step(c: LocalArray2D[V]): LocalArray2D[V] = {
-//
-//  }
+
 
 
 
