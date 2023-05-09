@@ -86,14 +86,31 @@ class LocalArray2D[V: scala.reflect.ClassTag](w:Int,h:Int,gid:gridCoordinate) ex
   }
 
 
-  def updateComponent(buffer:Iterable[(Int,Vector[V])],perCellAct:(V,Iterable[V])=>V):Unit = {
+  override def updateComponent[U](buffer:Iterable[(Int,Vector[U])], perCellAct:(U,Iterable[U])=>U):Unit = {
 
     val receiveMessage=buffer
 
     for (i<-0 until  height) {
 
       for (j<-0 until  width) {
-        val  neighbors= ListBuffer[V]()
+//      //debug performance by lamda function: 1600 ms
+//      val neighbors = (-1 to 1).flatMap { ni =>
+//        (-1 to 1).flatMap { nj =>
+//          if (ni == 0 && nj == 0) {
+//            None
+//          } else {
+//            val r = i + ni
+//            val c = j + nj
+//            if (r >= 0 && r < width && c >= 0 && c < height) {
+//              Some(currentBoard(r)(c).asInstanceOf[U])
+//            } else {
+//              None
+//            }
+//          }
+//        }
+//      }
+
+        val  neighbors= ListBuffer[U]()
         for (ni<- -1 to  1) {
 
           for (nj <- -1 to 1) {
@@ -103,44 +120,70 @@ class LocalArray2D[V: scala.reflect.ClassTag](w:Int,h:Int,gid:gridCoordinate) ex
               val r = i + ni
               //column index of the neighbor
               val c = j + nj
+//              //debug for performance:163 ms
+//              if (r >= 0 && r < width && c >= 0 && c < height){
+//                neighbors+= currentBoard(r)(c).asInstanceOf[U]
+//              }
 
+              // look up the state of the neighbors: 190 ms
               if (r == -1) {
                 if (c == -1) {
                   //topLeft
-                  neighbors+=receiveMessage.find { case (i, v) => i == 0 }.map { case (i, v) => v(0) }
+
+                  receiveMessage.find { case (i, v) => i == 0 }.foreach { case (i, v) =>
+                    neighbors += v(0)
+                  }
                 }
                 else if (c == width) {
                   //topRight
-                  neighbors+=receiveMessage.find { case (i, v) => i == 1 }.map { case (i, v) => v(0) }
+
+                  receiveMessage.find { case (i, v) => i == 1 }.foreach { case (i, v) =>
+                    neighbors += v(0)
+                  }
                 }
 
                 else {
                   //topEdge(c)
-                  neighbors+=receiveMessage.find { case (i, v) => i == 4 }.map { case (i, v) => v(c) }
+                  receiveMessage.find { case (i, v) => i == 4 }.foreach { case (i, v) =>
+                    neighbors += v(c)
+                  }
+
                 }
               } else if (r == height) {
                 if (c == -1) {
                   // bottomLeft
-                  neighbors+=receiveMessage.find { case (i, v) => i == 2 }.map { case (i, v) => v(0) }
+                  receiveMessage.find { case (i, v) => i == 2 }.foreach { case (i, v) =>
+                    neighbors += v(0)
+                  }
 
                 }
                 else if (c == width) {
                   //bottomRight
-                  neighbors+=receiveMessage.find { case (i, v) => i == 3 }.map { case (i, v) => v(0) }
+
+                  receiveMessage.find { case (i, v) => i == 3 }.foreach { case (i, v) =>
+                    neighbors += v(0)
+                  }
                 }
                 else {
                   //bottomEdge(c)
-                  neighbors+=receiveMessage.find { case (i, v) => i == 5 }.map { case (i, v) => v(c) }
+
+                  receiveMessage.find { case (i, v) => i == 5 }.foreach { case (i, v) =>
+                    neighbors += v(c)
+                  }
                 }
               } else {
                 if (c == -1) {
                   //leftEdge(r)
-                  neighbors+=receiveMessage.find { case (i, v) => i == 6 }.map { case (i, v) => v(r) }
+                  receiveMessage.find { case (i, v) => i == 6 }.foreach { case (i, v) =>
+                    neighbors += v(r)
+                  }
                 } else if (c == width) {
                   //rightEdge(r)
-                  neighbors+=receiveMessage.find { case (i, v) => i == 7 }.map { case (i, v) => v(r) }
+                  receiveMessage.find { case (i, v) => i == 7 }.foreach { case (i, v) =>
+                    neighbors += v(r)
+                  }
                 } else {
-                  neighbors+= currentBoard(r)(c)
+                  neighbors+= currentBoard(r)(c).asInstanceOf[U]
                 }
               }
 
@@ -150,9 +193,11 @@ class LocalArray2D[V: scala.reflect.ClassTag](w:Int,h:Int,gid:gridCoordinate) ex
 
         }
 
+
+
         // step function:apply the game of life rules to determine the next state
 
-        newBoard(i)(j)=perCellAct(currentBoard(i)(j),neighbors)
+        newBoard(i)(j)=perCellAct(currentBoard(i)(j).asInstanceOf[U],neighbors).asInstanceOf[V]
 
       }
 

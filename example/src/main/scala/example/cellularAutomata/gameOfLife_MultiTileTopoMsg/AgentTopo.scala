@@ -14,7 +14,7 @@ class AgentTopo[T]{
 
   def tbs(Sid:T,Did:T) : TopoMsg = ???
   def processMessage[V](m:Message,c:AgentTopo[T]):V = ???
-  def updateComponent[V](buffer:Iterable[(Int,Vector[V])],perCellAct:(V,Iterable[V])=>V):Unit = ???
+  def updateComponent[U](buffer:Iterable[(Int,Vector[U])],perCellAct:(U,Iterable[U])=>U):Unit = ???
 
 //  def updateMessage[V](c:AgentTopo[T] ,buffer:Iterable[V]):AgentTopo[T] = ???
 
