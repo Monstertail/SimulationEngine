@@ -22,7 +22,6 @@ object MainInit {
         }
 
         val tile = new Tile(L2DA)
-
         tile.id = i
         tile
       })
