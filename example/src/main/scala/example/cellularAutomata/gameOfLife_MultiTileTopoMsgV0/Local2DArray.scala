@@ -1,12 +1,12 @@
 package example
-package gameOfLifeMultiTileTopoMsg
+package gameOfLifeMultiTileTopoMsgV0
 
 import meta.runtime.Message
 
 import scala.reflect.ClassTag
 import scala.util.Random
 import scala.collection.mutable.ListBuffer
-import scala.collection.mutable.Map
+
 class gridCoordinate(val x: Int, val y: Int){
   val r_index=x
   val c_index=y
@@ -14,77 +14,79 @@ class gridCoordinate(val x: Int, val y: Int){
 
 
 
-class LocalArray2D[V: scala.reflect.ClassTag](w:Int,h:Int,gid:gridCoordinate) extends AgentTopo[gridCoordinate,Iterable[V]]{
-
+class LocalArray2D[V: scala.reflect.ClassTag](w:Int,h:Int,gid:gridCoordinate) extends AgentTopo[gridCoordinate]{
+//  val global_id:Pair = new Pair(0,0)
+//  val width: Int = 0
+//  val height:Int = 0
   val width=w
   val height=h
-
-  CompId=gid
+  val global_id =gid
   var currentBoard: Array[Array[V]] = Array.ofDim[V](h, w)
-//  //newBoard is used to store the updated states after step function for every cell
+  //newBoard is used to store the updated states after step function for every cell
   var newBoard: Array[Array[V]] = Array.ofDim[V](h, w)
 
-//  IncMsgBuff=Array.ofDim[Iterable[V]](h*w)
-    var recvMsgBuff: Map[Int, Vector[V]] = Map()
 
 
-  def tbs(c1: LocalArray2D[V], c2: LocalArray2D[V]): SndFN = {
-    (c1.CompId.c_index, c1.CompId.r_index, c2.CompId.c_index, c2.CompId.r_index) match {
-      case (c1c, c1r, c2c, c2r) if c1c == c2c && c2r + c2.height == c1r =>
-        ()=> VectorMsg(c1.CompId,c1.currentBoard(0))
+  def tbs(c1:LocalArray2D[V],c2:LocalArray2D[V]): TopoMsg = {
+    (c1.global_id.c_index, c1.global_id.r_index, c2.global_id.c_index, c2.global_id.r_index) match {
+      case (c1c, c1r, c2c, c2r) if c1c == c2c && c2r+c2.height == c1r  =>
+        RowMsgTop(c1.currentBoard(0))
       case (c1c, c1r, c2c, c2r) if c1c == c2c && c2r == c1r + c1.height =>
-        ()=>VectorMsg(c1.CompId,c1.currentBoard(c1.height - 1))
+        RowMsgBottom(c1.currentBoard(c1.height - 1))
       case (c1c, c1r, c2c, c2r) if c1r == c2r && c1c + c1.width == c2c =>
-        ()=>VectorMsg(c1.CompId,c1.currentBoard.map(row => row(row.length - 1)).toVector)
-      case (c1c, c1r, c2c, c2r) if c1r == c2r && c1c == c2c + c2.width =>
-        ()=>VectorMsg(c1.CompId,c1.currentBoard.map(row => row(0)).toVector)
-      case (c1c, c1r, c2c, c2r) if c1r == c2r + c2.height && c1c == c2c + c2.width =>
-        ()=>VectorMsg(c1.CompId,Vector(c1.currentBoard(0)(0)))
+        ColMsgRight(c1.currentBoard.map(row => row(row.length - 1)).toVector)
+      case (c1c, c1r, c2c, c2r) if c1r == c2r && c1c  == c2c+c2.width =>
+        ColMsgLeft(c1.currentBoard.map(row => row(0)).toVector)
+      case (c1c, c1r, c2c, c2r) if c1r == c2r + c2.height && c1c  == c2c+c2.width =>
+        DiagMsgTopLeft(c1.currentBoard(0)(0))
       case (c1c, c1r, c2c, c2r) if c1r == c2r + c2.height && c1c + c1.width == c2c =>
-        ()=>VectorMsg(c1.CompId,Vector(c1.currentBoard(0)(c1.width - 1)))
-      case (c1c, c1r, c2c, c2r) if c1r + c1.height == c2r && c1c == c2c + c2.width =>
-        ()=>VectorMsg(c1.CompId,Vector(c1.currentBoard(c1.height - 1)(0)))
+        DiagMsgTopRight(c1.currentBoard(0)(c1.width - 1))
+      case (c1c, c1r, c2c, c2r) if c1r + c1.height == c2r && c1c == c2c +c2.width=>
+        DiagMsgBottomLeft(c1.currentBoard(c1.height - 1)(0))
       case (c1c, c1r, c2c, c2r) if c1r + c1.height == c2r && c1c + c1.width == c2c =>
-        ()=>VectorMsg(c1.CompId,Vector(c1.currentBoard(c1.height - 1)(c1.width - 1)))
+        DiagMsgBottomRight(c1.currentBoard(c1.height - 1)(c1.width - 1))
 
     }
 
   }
 
-  def tbr(c1: LocalArray2D[V], c2: LocalArray2D[V]): RcvFN = (msg: TopoMsg) => {
-    (c1.CompId.c_index, c1.CompId.r_index, c2.CompId.c_index, c2.CompId.r_index) match {
-      case (c1c, c1r, c2c, c2r) if c1c == c2c && c2r + c2.height == c1r =>
-        //from top row in c1 to bottom row in c2
-        recvMsgBuff += ( 5 -> msg.asInstanceOf[VectorMsg].v)
+  def processMessage(m:TopoMsg,c:LocalArray2D[V]):(Int,Vector[V]) ={
+    m match {
+      case DiagMsgBottomRight(v) => {
+        (0,Vector(v.asInstanceOf[V]))
+      }
+      case DiagMsgBottomLeft(v) => {
+        (1, Vector(v.asInstanceOf[V]))
+      }
+      case DiagMsgTopRight(v) => {
+        (2, Vector(v.asInstanceOf[V]))
+      }
+      case DiagMsgTopLeft(v) => {
+        (3, Vector(v.asInstanceOf[V]))
+      }
+      case RowMsgBottom(v) => {
+        (4, v.toVector.asInstanceOf[Vector[V]])
+      }
+      case RowMsgTop(v) => {
 
-      case (c1c, c1r, c2c, c2r) if c1c == c2c && c2r == c1r + c1.height =>
-        //from bottom row in c1 to the top row in c2
-        recvMsgBuff += ( 4 -> msg.asInstanceOf[VectorMsg].v)
-      case (c1c, c1r, c2c, c2r) if c1r == c2r && c1c + c1.width == c2c =>
-        //from the right column in c1 to left column in c2
-        recvMsgBuff += ( 6 -> msg.asInstanceOf[VectorMsg].v)
-      case (c1c, c1r, c2c, c2r) if c1r == c2r && c1c == c2c + c2.width =>
-        //from the left column in c1 to right column in c2
-        recvMsgBuff += ( 7 -> msg.asInstanceOf[VectorMsg].v)
-      case (c1c, c1r, c2c, c2r) if c1r == c2r + c2.height && c1c == c2c + c2.width =>
-        //from the top left in c1 to bottom right in c2
-        recvMsgBuff += ( 3 -> msg.asInstanceOf[VectorMsg].v)
-      case (c1c, c1r, c2c, c2r) if c1r == c2r + c2.height && c1c + c1.width == c2c =>
-        //from the top right in c1 to bottom left in c2
-        recvMsgBuff += ( 2 -> msg.asInstanceOf[VectorMsg].v)
-      case (c1c, c1r, c2c, c2r) if c1r + c1.height == c2r && c1c == c2c + c2.width =>
-        //from the bottom left in c1 to top right in c2
-        recvMsgBuff += ( 1 -> msg.asInstanceOf[VectorMsg].v)
-      case (c1c, c1r, c2c, c2r) if c1r + c1.height == c2r && c1c + c1.width == c2c =>
-        //from the bottom right in c1 to top left in c2
-        recvMsgBuff += ( 0 -> msg.asInstanceOf[VectorMsg].v)
+        (5, v.toVector.asInstanceOf[Vector[V]])
+      }
+      case ColMsgRight(v) => {
+        (6, v.toVector.asInstanceOf[Vector[V]])
+      }
+
+      case ColMsgLeft(v) => {
+        (7, v.toVector.asInstanceOf[Vector[V]])
+      }
+
+
     }
+
+
   }
 
 
-
-
- def updateComponent[U](buffer:Map[Int,Vector[U]], perCellAct:(U,Iterable[U])=>U):Unit = {
+  override def updateComponent[U](buffer:Iterable[(Int,Vector[U])], perCellAct:(U,Iterable[U])=>U):Unit = {
 
     val receiveMessage=buffer
 
@@ -200,9 +202,6 @@ class LocalArray2D[V: scala.reflect.ClassTag](w:Int,h:Int,gid:gridCoordinate) ex
       }
 
     }
-
-   //clean the map
-    buffer.clear()
 
     // swap the reference
 

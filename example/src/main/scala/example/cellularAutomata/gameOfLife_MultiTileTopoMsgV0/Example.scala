@@ -1,5 +1,5 @@
 package example
-package gameOfLifeMultiTileTopoMsg
+package gameOfLifeMultiTileTopoMsgV0
 
 import cloudcity.lib.Graph.GenerateGraph.NonWrapping2DGraph
 
@@ -14,7 +14,7 @@ object MainInit {
       val totalComp: Int = row*col
 
       val tiles = Range(0, totalComp).map(i => {
-        val L2DA = new example.gameOfLifeMultiTileTopoMsg.LocalArray2D[Boolean](width, height, new example.gameOfLifeMultiTileTopoMsg.gridCoordinate((i / col)*height, (i % col)*width))
+        val L2DA = new example.gameOfLifeMultiTileTopoMsgV0.LocalArray2D[Boolean](width, height, new example.gameOfLifeMultiTileTopoMsgV0.gridCoordinate((i / col)*height, (i % col)*width))
 //        val C2DA=new example.gameOfLifeMultiTileTopoMsg.Array2DCal(L2DA)
         val random = new Random()
         for (i <- 0 until height; j <- 0 until width) {
@@ -30,7 +30,6 @@ object MainInit {
       println(s"tile 0's neighbor: ${graph(0)}")
       tiles.zipWithIndex.map(c => {
         c._1.LArray2D.Atopo = graph(c._2).map(i => tiles(i.toInt)).toIndexedSeq
-        c._1.LArray2D.compNeighborList=graph(c._2).map(i => tiles(i.toInt).LArray2D)
 
 
       })

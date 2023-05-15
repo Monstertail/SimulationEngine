@@ -1,5 +1,5 @@
 package example
-package gameOfLifeMultiTileTopoMsg
+package gameOfLifeMultiTileTopoMsgV0
 
 import scala.util.Random
 import meta.classLifting.SpecialInstructions._
@@ -30,7 +30,7 @@ class Tile(val LArray2D: LocalArray2D[Boolean] ) extends Actor {
 
             //send the message
             LArray2D.Atopo.foreach { v =>
-                sendMessage(v.id, LArray2D.sndHndlr(v.asInstanceOf[Tile].LArray2D.CompId)()
+                sendMessage(v.id, LArray2D.tbs(LArray2D, v.asInstanceOf[Tile].LArray2D)
                 )
             }
 
@@ -46,11 +46,12 @@ class Tile(val LArray2D: LocalArray2D[Boolean] ) extends Actor {
 
             //    //debug
             //    println(s"tile id: $id :"+"Message size=" + messages.size)
-            messages.map({m=> val msg= m.asInstanceOf[example.gameOfLifeMultiTileTopoMsg.VectorMsg]
-              LArray2D.rcvHndlr(msg.sid.asInstanceOf[gridCoordinate])(msg)
-            })
 
-            LArray2D.updateComponent(LArray2D.recvMsgBuff,
+            LArray2D.updateComponent(messages
+              .map(m => {
+                  val (i, v) = LArray2D.processMessage(m, LArray2D)
+                  (i, v)
+              }),
                 (current: Boolean, neighbors: Iterable[Boolean]) => {
                     val aliveNeighbors = neighbors.count(_ == true)
                     if (current) {
