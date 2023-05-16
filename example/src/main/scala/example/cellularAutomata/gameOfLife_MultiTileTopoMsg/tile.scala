@@ -28,46 +28,48 @@ class Tile(val LArray2D: LocalArray2D[Boolean] ) extends Actor {
 
         while (true) {
 
-            //send the message
-            LArray2D.Atopo.foreach { v =>
-                sendMessage(v.id, LArray2D.sndHndlr(v.asInstanceOf[Tile].LArray2D.CompId)()
-                )
-            }
-
-            waitRounds(1)
-            //receive the message
-            var m = receiveMessage()
-            var messages = ListBuffer[example.gameOfLifeMultiTileTopoMsg.TopoMsg]()
-
-            while (m.isDefined) {
-                messages += m.get.asInstanceOf[example.gameOfLifeMultiTileTopoMsg.TopoMsg]
-                m = receiveMessage()
-            }
+//            //send the message
+//            LArray2D.Atopo.foreach { v =>
+//                sendMessage(v.id, LArray2D.sndHndlr(v.asInstanceOf[Tile].LArray2D.CompId)()
+//                )
+//            }
+//
+//            waitRounds(1)
+//            //receive the message
+//            var m = receiveMessage()
+//            var messages = ListBuffer[example.gameOfLifeMultiTileTopoMsg.TopoMsg]()
+//
+//            while (m.isDefined) {
+//                messages += m.get.asInstanceOf[example.gameOfLifeMultiTileTopoMsg.TopoMsg]
+//                m = receiveMessage()
+//            }
 
             //    //debug
             //    println(s"tile id: $id :"+"Message size=" + messages.size)
-            messages.map({m=> val msg= m.asInstanceOf[example.gameOfLifeMultiTileTopoMsg.VectorMsg]
-              LArray2D.rcvHndlr(msg.sid.asInstanceOf[gridCoordinate])(msg)
-            })
 
-            LArray2D.updateComponent(LArray2D.recvMsgBuff,
-                (current: Boolean, neighbors: Iterable[Boolean]) => {
-                    val aliveNeighbors = neighbors.count(_ == true)
-                    if (current) {
-                        if (aliveNeighbors == 2 || aliveNeighbors == 3) {
-                            true
-                        } else {
-                            false
-                        }
-                    } else {
-                        if (aliveNeighbors == 3) {
-                            true
-                        } else {
-                            false
-                        }
-                    }
-                }
-            )
+//            messages.map({
+//                case VectorMsg(sid,v)=>
+//                    LArray2D.rcvHndlr(sid.asInstanceOf[example.gameOfLifeMultiTileTopoMsg.gridCoordinate])(VectorMsg(sid,v))
+//            })
+//
+//            LArray2D.updateComponent(LArray2D.recvMsgBuff,
+//                (current: Boolean, neighbors: Iterable[Boolean]) => {
+//                    val aliveNeighbors = neighbors.count(_ == true)
+//                    if (current) {
+//                        if (aliveNeighbors == 2 || aliveNeighbors == 3) {
+//                            true
+//                        } else {
+//                            false
+//                        }
+//                    } else {
+//                        if (aliveNeighbors == 3) {
+//                            true
+//                        } else {
+//                            false
+//                        }
+//                    }
+//                }
+//            )
 
 
         }

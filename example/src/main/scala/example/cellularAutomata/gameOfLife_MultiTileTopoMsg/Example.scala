@@ -20,6 +20,7 @@ object MainInit {
         for (i <- 0 until height; j <- 0 until width) {
           L2DA.currentBoard(i)(j) = random.nextBoolean()
         }
+
         val tile = new Tile(L2DA)
         tile.id = i
         tile
@@ -30,8 +31,8 @@ object MainInit {
       println(s"tile 0's neighbor: ${graph(0)}")
       tiles.zipWithIndex.map(c => {
         c._1.LArray2D.Atopo = graph(c._2).map(i => tiles(i.toInt)).toIndexedSeq
-        c._1.LArray2D.compNeighborList=graph(c._2).map(i => tiles(i.toInt).LArray2D)
-
+        c._1.LArray2D.compNeighborList=graph(c._2).map(i => tiles(i.toInt).LArray2D).toIndexedSeq
+        c._1.LArray2D.init()
 
       })
 

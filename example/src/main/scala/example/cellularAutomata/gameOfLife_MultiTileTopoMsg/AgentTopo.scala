@@ -3,7 +3,7 @@ package gameOfLifeMultiTileTopoMsg
 
 import meta.runtime.Actor.AgentId
 import meta.runtime.{Actor, Message}
-
+import scala.collection.mutable
 class AgentTopo[CompIdT, IncMsgBuffT]{
   //topo of agents
   var Atopo:IndexedSeq[Actor]= _
@@ -12,23 +12,28 @@ class AgentTopo[CompIdT, IncMsgBuffT]{
   // record the component ID
   var CompId:CompIdT = _
 
+
+
   /* run at sim initialization time, not during a step
      generates a function to execute at runtime
   */
   type SndFN = () => TopoMsg
-  type RcvFN = TopoMsg => ()
+  type RcvFN = TopoMsg => Unit
 
-  var sndHndlr:Map[CompIdT, SndFN] = Map.empty
+  val sndHndlr:mutable.Map[CompIdT, SndFN] = mutable.Map.empty[CompIdT, SndFN]
+//  var sndHndlr = Map.empty[CompIdT, SndFN]
 
-  var rcvHndlr: Map[CompIdT, RcvFN] = Map.empty
+  val rcvHndlr: mutable.Map[CompIdT, RcvFN] = mutable.Map.empty
+
+
 
   // make send and rcv handlers ; call tbs and tbr
   def init(): Unit = {
     compNeighborList.foreach(n => {
       //update sender handler
-      sndHndlr = sndHndlr + (n.CompId-> tbs(this, n))
+      sndHndlr.update(n.CompId, tbs(this, n))
       //update receive handler
-      rcvHndlr = rcvHndlr + (n.CompId-> tbr(n,this))
+      rcvHndlr.update(n.CompId, tbr(n, this))
     })
   }
 

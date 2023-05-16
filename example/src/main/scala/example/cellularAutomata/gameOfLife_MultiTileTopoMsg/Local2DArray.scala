@@ -3,6 +3,7 @@ package gameOfLifeMultiTileTopoMsg
 
 import meta.runtime.Message
 
+import scala.collection.mutable
 import scala.reflect.ClassTag
 import scala.util.Random
 import scala.collection.mutable.ListBuffer
@@ -25,8 +26,18 @@ class LocalArray2D[V: scala.reflect.ClassTag](w:Int,h:Int,gid:gridCoordinate) ex
   var newBoard: Array[Array[V]] = Array.ofDim[V](h, w)
 
 //  IncMsgBuff=Array.ofDim[Iterable[V]](h*w)
-    var recvMsgBuff: Map[Int, Vector[V]] = Map()
+    val recvMsgBuff: mutable.Map[Int, Vector[V]] = mutable.Map.empty
 
+
+  override def init(): Unit = {
+    compNeighborList.foreach(n => {
+      val comp=n.asInstanceOf[LocalArray2D[V]]
+      //update sender handler
+      sndHndlr.update(comp.CompId, tbs(this, comp))
+      //update receive handler
+      rcvHndlr.update(comp.CompId, tbr(comp, this))
+    })
+  }
 
   def tbs(c1: LocalArray2D[V], c2: LocalArray2D[V]): SndFN = {
     (c1.CompId.c_index, c1.CompId.r_index, c2.CompId.c_index, c2.CompId.r_index) match {
@@ -55,33 +66,39 @@ class LocalArray2D[V: scala.reflect.ClassTag](w:Int,h:Int,gid:gridCoordinate) ex
     (c1.CompId.c_index, c1.CompId.r_index, c2.CompId.c_index, c2.CompId.r_index) match {
       case (c1c, c1r, c2c, c2r) if c1c == c2c && c2r + c2.height == c1r =>
         //from top row in c1 to bottom row in c2
-        recvMsgBuff += ( 5 -> msg.asInstanceOf[VectorMsg].v)
+        recvMsgBuff += ( 5 -> msg.asInstanceOf[VectorMsg[gridCoordinate,V]].v.toVector)
 
       case (c1c, c1r, c2c, c2r) if c1c == c2c && c2r == c1r + c1.height =>
         //from bottom row in c1 to the top row in c2
-        recvMsgBuff += ( 4 -> msg.asInstanceOf[VectorMsg].v)
+        recvMsgBuff += ( 4 -> msg.asInstanceOf[VectorMsg[gridCoordinate,V]].v.toVector)
       case (c1c, c1r, c2c, c2r) if c1r == c2r && c1c + c1.width == c2c =>
         //from the right column in c1 to left column in c2
-        recvMsgBuff += ( 6 -> msg.asInstanceOf[VectorMsg].v)
+        recvMsgBuff += ( 6 -> msg.asInstanceOf[VectorMsg[gridCoordinate,V]].v.toVector)
       case (c1c, c1r, c2c, c2r) if c1r == c2r && c1c == c2c + c2.width =>
         //from the left column in c1 to right column in c2
-        recvMsgBuff += ( 7 -> msg.asInstanceOf[VectorMsg].v)
+        recvMsgBuff += ( 7 -> msg.asInstanceOf[VectorMsg[gridCoordinate,V]].v.toVector)
       case (c1c, c1r, c2c, c2r) if c1r == c2r + c2.height && c1c == c2c + c2.width =>
         //from the top left in c1 to bottom right in c2
-        recvMsgBuff += ( 3 -> msg.asInstanceOf[VectorMsg].v)
+        recvMsgBuff += ( 3 -> msg.asInstanceOf[VectorMsg[gridCoordinate,V]].v.toVector)
       case (c1c, c1r, c2c, c2r) if c1r == c2r + c2.height && c1c + c1.width == c2c =>
         //from the top right in c1 to bottom left in c2
-        recvMsgBuff += ( 2 -> msg.asInstanceOf[VectorMsg].v)
+        recvMsgBuff += ( 2 -> msg.asInstanceOf[VectorMsg[gridCoordinate,V]].v.toVector)
       case (c1c, c1r, c2c, c2r) if c1r + c1.height == c2r && c1c == c2c + c2.width =>
         //from the bottom left in c1 to top right in c2
-        recvMsgBuff += ( 1 -> msg.asInstanceOf[VectorMsg].v)
+        recvMsgBuff += ( 1 -> msg.asInstanceOf[VectorMsg[gridCoordinate,V]].v.toVector)
       case (c1c, c1r, c2c, c2r) if c1r + c1.height == c2r && c1c + c1.width == c2c =>
         //from the bottom right in c1 to top left in c2
-        recvMsgBuff += ( 0 -> msg.asInstanceOf[VectorMsg].v)
+        recvMsgBuff += ( 0 -> msg.asInstanceOf[VectorMsg[gridCoordinate,V]].v.toVector)
     }
   }
 
-
+  def applyMessage(msg:TopoMsg):Unit={
+        msg match {
+          case VectorMsg(sid, v) => {
+            rcvHndlr(sid.asInstanceOf[gridCoordinate])(msg)
+          }
+        }
+  }
 
 
  def updateComponent[U](buffer:Map[Int,Vector[U]], perCellAct:(U,Iterable[U])=>U):Unit = {
