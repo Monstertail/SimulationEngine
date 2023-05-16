@@ -20,7 +20,7 @@ class AgentTopo[CompIdT, IncMsgBuffT]{
   type SndFN = () => TopoMsg
   type RcvFN = TopoMsg => Unit
 
-  val sndHndlr:mutable.Map[CompIdT, SndFN] = mutable.Map.empty[CompIdT, SndFN]
+  val sndHndlr:mutable.Map[CompIdT, SndFN] = mutable.Map.empty
 //  var sndHndlr = Map.empty[CompIdT, SndFN]
 
   val rcvHndlr: mutable.Map[CompIdT, RcvFN] = mutable.Map.empty

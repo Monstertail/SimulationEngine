@@ -3,7 +3,11 @@ package gameOfLifeMultiTileTopoMsg
 import meta.runtime.Message
 
 sealed trait TopoMsg extends Message
-case class VectorMsg[CompIdT,T](sid: CompIdT,v:IndexedSeq[T])  extends TopoMsg
+case class VectorMsg[CompIdT,T](sid: CompIdT,v:IndexedSeq[T])  extends TopoMsg{
+  def printMsg(): Unit = {
+    println("VectorMsg: " + v)
+  }
+}
 
 //case class RowMsgTop[T](v:IndexedSeq[T]) extends TopoMsg
 //

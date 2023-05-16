@@ -42,9 +42,9 @@ class LocalArray2D[V: scala.reflect.ClassTag](w:Int,h:Int,gid:gridCoordinate) ex
   def tbs(c1: LocalArray2D[V], c2: LocalArray2D[V]): SndFN = {
     (c1.CompId.c_index, c1.CompId.r_index, c2.CompId.c_index, c2.CompId.r_index) match {
       case (c1c, c1r, c2c, c2r) if c1c == c2c && c2r + c2.height == c1r =>
-        ()=> VectorMsg(c1.CompId,c1.currentBoard(0))
+        ()=> VectorMsg(c1.CompId,c1.currentBoard(0).toVector)
       case (c1c, c1r, c2c, c2r) if c1c == c2c && c2r == c1r + c1.height =>
-        ()=>VectorMsg(c1.CompId,c1.currentBoard(c1.height - 1))
+        ()=>VectorMsg(c1.CompId,c1.currentBoard(c1.height - 1).toVector)
       case (c1c, c1r, c2c, c2r) if c1r == c2r && c1c + c1.width == c2c =>
         ()=>VectorMsg(c1.CompId,c1.currentBoard.map(row => row(row.length - 1)).toVector)
       case (c1c, c1r, c2c, c2r) if c1r == c2r && c1c == c2c + c2.width =>
@@ -104,26 +104,13 @@ class LocalArray2D[V: scala.reflect.ClassTag](w:Int,h:Int,gid:gridCoordinate) ex
  def updateComponent[U](buffer:Map[Int,Vector[U]], perCellAct:(U,Iterable[U])=>U):Unit = {
 
     val receiveMessage=buffer
+//   //debug
+//    println(buffer)
 
     for (i<-0 until  height) {
 
       for (j<-0 until  width) {
-//      //--------------------------------debug performance by lamda function: 1600 ms
-//      val neighbors = (-1 to 1).flatMap { ni =>
-//        (-1 to 1).flatMap { nj =>
-//          if (ni == 0 && nj == 0) {
-//            None
-//          } else {
-//            val r = i + ni
-//            val c = j + nj
-//            if (r >= 0 && r < width && c >= 0 && c < height) {
-//              Some(currentBoard(r)(c).asInstanceOf[U])
-//            } else {
-//              None
-//            }
-//          }
-//        }
-//      }
+
 
         val  neighbors= ListBuffer[U]()
         for (ni<- -1 to  1) {
@@ -220,7 +207,9 @@ class LocalArray2D[V: scala.reflect.ClassTag](w:Int,h:Int,gid:gridCoordinate) ex
 
    //clean the map
     buffer.clear()
-
+    if (buffer.size!=0){
+      println("ERROR! MSG Buffer is not cleared!")
+    }
     // swap the reference
 
     val temp = currentBoard
