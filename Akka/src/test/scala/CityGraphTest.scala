@@ -15,7 +15,8 @@ class GoLTileTest extends FlatSpec {
 
     trait ComponentMessage extends Message
     class GeneralMessage[MT](val content: Iterable[MT], val cid: (Coordinate2D, Coordinate2D)) extends ComponentMessage
-    class Boolean2DArrayMessage(val content: Iterable[Boolean], val cid: (Coordinate2D, Coordinate2D)) extends ComponentMessage
+//    class Boolean2DArrayMessage(val content: Iterable[Boolean], val cid: (Coordinate2D, Coordinate2D)) extends ComponentMessage
+    class GraphMessage[MT](val content: Iterable[(Coordinate2D,MT)]) extends ComponentMessage
 
     trait Component[T, C] {
         // def topo(c: C): Iterable[C] = ???
@@ -28,29 +29,6 @@ class GoLTileTest extends FlatSpec {
     }
 
 
-    //record the topo among tiles
-    //In addition to making the code more graceful, what is the specific role of the nested class?
-    class TilesTopo(tilesArrayRow: Int, tilesArrayCol: Int) extends Component[GameOfLifeTile,Coordinate2D]{
-
-        lazy val tARow: Int = tilesArrayRow
-        lazy val tACol: Int = tilesArrayCol
-        var edgeList:Array[Array[GameOfLifeTile]]=Array.ofDim[GameOfLifeTile](tARow, tACol)
-
-        override def topo(c: Coordinate2D): Iterator[GameOfLifeTile] = {
-            val uniqueCoordinates = scala.collection.mutable.Set.empty[(Int, Int)]
-
-            for {
-                i <- -1 to 1
-                j <- -1 to 1
-                if !(i == 0 && j == 0)
-                dx = (c.x + i + tARow) % tARow
-                dy = (c.y + j + tACol) % tACol
-                if uniqueCoordinates.add((dx, dy))
-            } yield edgeList(dx)(dy)
-
-        }.iterator
-
-    }
 
 
     trait Monoid[A] {
@@ -120,61 +98,78 @@ class GoLTileTest extends FlatSpec {
 
 
     // For simplicity, hard code Boolean type instead of taking a type variable
-    class Boolean2DArray(val cid: (Coordinate2D, Coordinate2D)) extends Component[Boolean, Coordinate2D] {
+    class IntGeneralGraph(val cid: (Coordinate2D, Coordinate2D)) extends Component[Int, Coordinate2D] {
         // For simplicity, assume only vertical partitioning (send an adjacent row). only rows are padded
         // a 2D array is uniquely defined by its shape (upper left, lower right)
-        lazy val rows: Int = (cid._2.x - cid._1.x)+2
-        lazy val cols: Int = (cid._2.y - cid._1.y)
+        lazy val vertexNum: Int = (cid._2.y - cid._1.y)+1
 
-        var oldBoard: Array[Array[Boolean]] = Array.ofDim[Boolean](rows, cols)
-        var newBoard: Array[Array[Boolean]] = Array.ofDim[Boolean](rows, cols)
+        var edgeList: Map[Coordinate2D,Iterable[Coordinate2D]] = Map.empty
+        var localState: Array[Int]=Array.ofDim(vertexNum)
 
-        // Fill in the 2D grid with init values in the shape
-        def fill(init: IndexedSeq[Boolean]): Unit = {
+        // Fill in each vertex inside this component with init values
+        def fill(init: IndexedSeq[Int]): Unit = {
             var ctr: Int = 0
-            for (i <- (0 to (cid._2.x - cid._1.x)-1)) {
-                for (j <- (0 to cols-1)) {
-                    oldBoard(i+1)(j) = init(ctr)
-                    ctr+=1
-                }
+            for (i <- (0 to (vertexNum-1))) {
+                localState(i) = init(ctr)
+                ctr+=1
             }
         }
 
+        def findKeyByDst(Dst: Coordinate2D, edgeList: Map[Coordinate2D, Iterable[Coordinate2D]]): Option[Coordinate2D] = {
+            edgeList.find { case (_, neighbors) => neighbors.exists(_ == Dst) }.map { case (key, _) => key }
+        }
+
+
         // For simplicity, consider only top and bottom two directions.
-        override def tbs(c: Component[Boolean, Coordinate2D]): () => ComponentMessage = {
+        override def tbs(c: Component[Int, Coordinate2D]): () => ComponentMessage = {
             c match {
-                case c: Boolean2DArray => {
-                    c.cid match { 
-                        case (Coordinate2D(x1, y1), Coordinate2D(x2, y2)) if (y1 == cid._1.y && y2 == cid._2.y) =>
-                            // bottom
-                            if (x1 > cid._2.x) {
-                                () => new Boolean2DArrayMessage(oldBoard(rows-1), (Coordinate2D(cid._2.x, cid._1.y), cid._2))
-                            // top
-                            } else {
-                                () => new Boolean2DArrayMessage(oldBoard(1), (cid._1, Coordinate2D(cid._1.x, cid._2.y)))
+                case c: IntGeneralGraph => {
+                    var connected: Iterable[(Coordinate2D, Coordinate2D)] = Iterable.empty
+
+                    for (i <- c.cid._1.y to c.cid._2.y) {
+                        val neighbor_candidate = Coordinate2D(c.cid._1.x, i)
+                        val keyOption = findKeyByDst(neighbor_candidate, edgeList)
+                        keyOption.foreach { key =>
+                            // Add the key and associated value to content
+                            connected = connected ++ Iterable((key, neighbor_candidate))
+                        }
+                    }
+
+                    if (connected.nonEmpty) {
+                        // Generate messages based on non-empty content
+                        // Example: return a function that creates a ComponentMessage
+
+                        () => {
+                            // Construct the message using the content
+                            val messageContent = connected.map { case (src, dst) =>
+                                (dst, localState(src.x-c.cid._1.x))
+//                                content = content  ++ Iterable((dst, localState(src.x-c.cid._1.x)))
                             }
-                        case _ =>
-                            throw new Exception(f"Unsupported tbs direction in ${c}")
-                            () => new Boolean2DArrayMessage(oldBoard.flatten.toVector, cid)
+
+                            // Return the ComponentMessage
+                            new GraphMessage[Int](messageContent)
+                        }
+                    } else {
+                        throw new Exception(f"Unsupported direction in ${c}")
                     }
                 }
                 case _ =>
-                    () => new Boolean2DArrayMessage(oldBoard.flatten.toVector, cid)
+                    throw new Exception(f"Unsupported component type in ${c}")
             }
         }
 
         override def tbr(msg: ComponentMessage): Unit = {
             msg match {
-                case x: Boolean2DArrayMessage => {
-                    x.cid match {
-                        case (Coordinate2D(x1, y1), Coordinate2D(x2, y2)) if (y1 == cid._1.y && y2 == cid._2.y) =>                         
+                case x: GraphMessage[Int] => {
+                    x.content match {
+                        case (Coordinate2D(x1, y1), value) if (y1 == cid._1.y && y2 == cid._2.y) =>
                             if (x1 > cid._2.x) {
                                 x.content.copyToArray(oldBoard(rows-1))
                             } else {
                                 x.content.copyToArray(oldBoard(0))
                             }
                         case _ =>
-                            throw new Exception("Boolean 2d array, unsupported messages!")
+                            throw new Exception("General graph, unsupported messages!")
                     }
                 }
                 case _ => throw new Exception("Unsupported messages!")
@@ -320,27 +315,6 @@ class GoLTileTest extends FlatSpec {
         })
 
 
-//        //nested defination
-//        val tiles=new TilesTopo(tileArrayRows,tileArrayCols)
-//
-//        for (i <- 0 until tiles.tARow; j <- 0 until tiles.tACol) {
-//            val tile = tiles.edgeList(i)(j)
-//            val x = new GameOfLifeTile((Coordinate2D(rowsPerTile * i, 0), Coordinate2D(rowsPerTile * (i + 1) - 1, colsPerTile)))
-//            x.fill(Range(0, rowsPerTile * colsPerTile).map(_ => Random.nextBoolean))
-//
-//        }
-//
-//        val agents: IndexedSeq[GameOfLifeTileAgent] = for {
-//            i <- 0 until tiles.tARow
-//            j <- 0 until tiles.tACol
-//        } yield {
-//            val tile = tiles.edgeList(i)(j)
-//            new GameOfLifeTileAgent(tile)
-//        }
-//
-//        agents.foreach(a => {
-//            a.msgGenerator = a.connectedAgentIds.map(i => (i, a.tile.tbs(tiles.edgeList(i.toInt / tiles.tACol) (i.toInt % tiles.tACol )))).toMap
-//        })
 
 
         val snapshot1 = API.Simulate(agents, 200)
