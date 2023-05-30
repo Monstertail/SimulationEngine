@@ -1,7 +1,6 @@
 package simulation.akka
 package test
 
-import cloudcity.lib.Graph.GenerateGraph.NonWrapping2DGraph
 import meta.runtime._
 import simulation.akka.API._
 import org.scalatest.FlatSpec
@@ -15,6 +14,7 @@ class GoLTileTest extends FlatSpec {
     // case class TileCoordinate(x: Coordinate2D, y: Coordinate2D) extends Coordinate
 
     trait ComponentMessage extends Message
+    class GeneralMessage[MT](val content: Iterable[MT], val cid: (Coordinate2D, Coordinate2D)) extends ComponentMessage
     class Boolean2DArrayMessage(val content: Iterable[Boolean], val cid: (Coordinate2D, Coordinate2D)) extends ComponentMessage
 
     trait Component[T, C] {
@@ -27,12 +27,96 @@ class GoLTileTest extends FlatSpec {
         def tbr(msg: ComponentMessage): Unit = ???
     }
 
+    //record the topo among tiles
+    //In addition to making the code more graceful, what is the specific role of the nested class?
+    class TilesTopo(tilesArrayRow: Int, tilesArrayCol: Int) extends Component[GameOfLifeTile,Coordinate2D]{
+
+        lazy val tARow: Int = tilesArrayRow
+        lazy val tACol: Int = tilesArrayCol
+        var edgeList:Array[Array[GameOfLifeTile]]=Array.ofDim[GameOfLifeTile](tARow, tACol)
+
+
+    }
+
+
+    trait Monoid[A] {
+        def op(a: A, b: A): A
+
+        def unit: A
+    }
+
+
+    object Monoid {
+        implicit val intMonoid: Monoid[Int] = new Monoid[Int] {
+            def op(a: Int, b: Int): Int = a + b
+
+            def unit: Int = 0
+        }
+
+        implicit val booleanMonoid: Monoid[Boolean] = new Monoid[Boolean] {
+            def op(a: Boolean, b: Boolean): Boolean = a || b
+
+            def unit: Boolean = false
+//            def count(a: Int, b: Boolean): Int = a + (if (b) 1 else 0)
+        }
+
+        implicit val stringMonoid: Monoid[String] = new Monoid[String] {
+            def op(a: String, b: String): String = a + b
+
+            def unit: String = ""
+        }
+
+
+    }
+
+
+    implicit class MonoidOps[A](a: A)(implicit ev: Monoid[A]) {
+        def combine(b: A): A = ev.op(a, b)
+        def empty: A = ev.unit
+    }
+
+
+
+
+    class actionPerVertex[MT]{
+        def calculateDefault[MT](messages: Iterable[GeneralMessage[MT]])(implicit monoid: Monoid[MT]): MT = {
+            val result= messages.map(x=>x.content.foldLeft(monoid.unit)(monoid.op)).foldLeft(monoid.unit)(monoid.op)
+            result
+        }
+
+        def apply[LS](expression: Option[Iterable[GeneralMessage[MT]]=>LS], messages:Iterable[GeneralMessage[MT]] ):LS = {
+            expression match {
+                case None=>  calculateDefault(messages).asInstanceOf[LS]
+
+
+                case Some(func) => func(messages)
+            }
+        }
+    }
+
+
+
+    //        def apA_accumM(messages:Iterable[ComponentMessage]):Int = {
+    //            var sum: Int = 0
+    //            for (message <- messages) {
+    //                message match {
+    //                    case IntMessage(value) =>
+    //                        sum += value
+    //                    case _ => // other types of message
+    //                }
+    //            }
+    //            sum
+    //
+    //        }
+
+
+
     // For simplicity, hard code Boolean type instead of taking a type variable
     class Boolean2DArray(val cid: (Coordinate2D, Coordinate2D)) extends Component[Boolean, Coordinate2D] {
         // For simplicity, assume only vertical partitioning (send an adjacent row). only rows are padded
         // a 2D array is uniquely defined by its shape (upper left, lower right)
         lazy val rows: Int = (cid._2.x - cid._1.x)+2
-        lazy val cols: Int = (cid._2.y - cid._1.y)+2
+        lazy val cols: Int = (cid._2.y - cid._1.y)
 
         var oldBoard: Array[Array[Boolean]] = Array.ofDim[Boolean](rows, cols)
         var newBoard: Array[Array[Boolean]] = Array.ofDim[Boolean](rows, cols)
@@ -40,8 +124,8 @@ class GoLTileTest extends FlatSpec {
         // Fill in the 2D grid with init values in the shape
         def fill(init: IndexedSeq[Boolean]): Unit = {
             var ctr: Int = 0
-            for (i <- (1 to rows-2)) {
-                for (j <- (1 to cols-2)) {
+            for (i <- (0 to (cid._2.x - cid._1.x)-1)) {
+                for (j <- (0 to cols-1)) {
                     oldBoard(i+1)(j) = init(ctr)
                     ctr+=1
                 }
@@ -56,37 +140,11 @@ class GoLTileTest extends FlatSpec {
                         case (Coordinate2D(x1, y1), Coordinate2D(x2, y2)) if (y1 == cid._1.y && y2 == cid._2.y) =>
                             // bottom
                             if (x1 > cid._2.x) {
-                                () => new Boolean2DArrayMessage(oldBoard(rows-2), cid)
+                                () => new Boolean2DArrayMessage(oldBoard(rows-1), (Coordinate2D(cid._2.x, cid._1.y), cid._2))
                             // top
                             } else {
-                                () => new Boolean2DArrayMessage(oldBoard(1), cid)
+                                () => new Boolean2DArrayMessage(oldBoard(1), (cid._1, Coordinate2D(cid._1.x, cid._2.y)))
                             }
-                        case (Coordinate2D(x1, y1), Coordinate2D(x2, y2)) if (x1 == cid._1.x && x2 == cid._2.x) =>
-                            //right
-                            if (y1 > cid._2.y) {
-                                () => new Boolean2DArrayMessage(oldBoard.map(row => row(cols-2)), cid)
-                                // left
-                            } else {
-                                () => new Boolean2DArrayMessage(oldBoard.map(row => row(1)), cid)
-                            }
-                        case (Coordinate2D(x1, y1), Coordinate2D(x2, y2)) if (x1 == cid._2.x+1 ) =>
-                            //topleft
-                            if (y1 == cid._2.y+1) {
-                                () => new Boolean2DArrayMessage(Vector(oldBoard(1)(1)), cid)
-                                // top right
-                            } else {
-                                () => new Boolean2DArrayMessage(Vector(oldBoard(1)(cols-2)), cid)
-                            }
-
-                        case (Coordinate2D(x1, y1), Coordinate2D(x2, y2)) if (x2+1 == cid._1.x ) =>
-                            //bottomleft
-                            if (y1 == cid._2.y + 1) {
-                                () => new Boolean2DArrayMessage(Vector(oldBoard(rows-2)(1)), cid)
-                                // top right
-                            } else {
-                                () => new Boolean2DArrayMessage(Vector(oldBoard(rows-2)(cols - 2)), cid)
-                            }
-
                         case _ =>
                             throw new Exception(f"Unsupported tbs direction in ${c}")
                             () => new Boolean2DArrayMessage(oldBoard.flatten.toVector, cid)
@@ -101,45 +159,12 @@ class GoLTileTest extends FlatSpec {
             msg match {
                 case x: Boolean2DArrayMessage => {
                     x.cid match {
-                        case (Coordinate2D(x1, y1), Coordinate2D(x2, y2)) if (y1 == cid._1.y && y2 == cid._2.y) =>
-                            // from bottom to top
+                        case (Coordinate2D(x1, y1), Coordinate2D(x2, y2)) if (y1 == cid._1.y && y2 == cid._2.y) =>                         
                             if (x1 > cid._2.x) {
-                                x.content.copyToArray(oldBoard(0))
-                                // from top to bottom
-                            } else {
                                 x.content.copyToArray(oldBoard(rows-1))
-                            }
-                        case (Coordinate2D(x1, y1), Coordinate2D(x2, y2)) if (x1 == cid._1.x && x2 == cid._2.x) =>
-                            //from right to left
-                            if (y1 > cid._2.y) {
-                                for(i <- 1 to rows-2 ){
-                                    oldBoard(i)(0)=x.content.toVector(i)
-                                }
-
-                                // from left to right
                             } else {
-                                for (i <- 1 to rows - 2) {
-                                    oldBoard(i)(cols-1) = x.content.toVector(i)
-                                }
+                                x.content.copyToArray(oldBoard(0))
                             }
-                        case (Coordinate2D(x1, y1), Coordinate2D(x2, y2)) if (x1 == cid._2.x + 1) =>
-                            //from topleft to bottom right
-                            if (y1 == cid._2.y + 1) {
-                                oldBoard(rows-1)(cols-1)=x.content.toVector(0)
-                                // top right to bottom left
-                            } else {
-                                oldBoard(rows-1)(0)=x.content.toVector(0)
-                            }
-
-                        case (Coordinate2D(x1, y1), Coordinate2D(x2, y2)) if (x2 + 1 == cid._1.x) =>
-                            //bottom left to top right
-                            if (y1 == cid._2.y + 1) {
-                                oldBoard(0)(cols-1)=x.content.toVector(0)
-                                // bottom right to top left
-                            } else {
-                                oldBoard(0)(0)=x.content.toVector(0)
-                            }
-
                         case _ =>
                             throw new Exception("Boolean 2d array, unsupported messages!")
                     }
@@ -149,10 +174,10 @@ class GoLTileTest extends FlatSpec {
         }
 
         def update(): Unit = {
-            for (i <- (1 to rows-2)) {
-                for (j <- (1 to cols-2)) {
-                     newBoard(i)(j) = actionPerVertexFused(Coordinate2D(i, j))
-//                    newBoard(i)(j) = actionPerVertexStream(oldBoard(i)(j), topo(Coordinate2D(i, j)))
+            for (i <- (1 to rows-1)) {
+                for (j <- (0 to cols-1)) {
+                    // newBoard(i)(j) = actionPerVertexFused(Coordinate2D(i, j))
+                    newBoard(i)(j) = actionPerVertexStream(oldBoard(i)(j), topo(Coordinate2D(i, j)))
                 }
             }
             oldBoard = newBoard
@@ -253,50 +278,58 @@ class GoLTileTest extends FlatSpec {
     }
 
     f"Create a number of tile agents for game of life example" should "run" in {
-        val colsPerTile: Int = System.getProperty("width", "1000").toInt
-        val rowsPerTile: Int = System.getProperty("height", "1000").toInt
-        val tilesPerRow: Int = System.getProperty("col", "1").toInt
-        val tilesPerCol: Int = System.getProperty("row", "1").toInt
-        val totalTurns: Int = System.getProperty("totalTurns", "200").toInt
-
-        println(s"Width: $colsPerTile")
-        println(s"Height: $rowsPerTile")
-        println(s"Column: $tilesPerRow")
-        println(s"Row: $tilesPerCol")
-        println(s"Total turns: $totalTurns")
-
+        val totalTiles: Int = 1
         
-//        val rowsPerTile: Int = 1000
-//        val colsPerTile: Int = 1000
-//
-//        val tilesPerRow:Int =1
-//        val tilesPerCol:Int = 1
-        val totalTiles: Int = tilesPerRow * tilesPerCol
+        val rowsPerTile: Int = 100
+        val colsPerTile: Int = 1000
+        val tileArrayRows:Int=1
+        val tileArrayCols:Int=1
+        val tiles=new TilesTopo(tileArrayRows,tileArrayCols)
 
-        val tiles = Range(0, totalTiles).map(i => {
-            val r_index=i/tilesPerRow
-            val c_index=i% tilesPerRow
-            val x = new GameOfLifeTile((Coordinate2D(rowsPerTile*r_index, colsPerTile*c_index), Coordinate2D(rowsPerTile*(r_index+1)-1, colsPerTile*(c_index+1)-1)))
-            x.fill(Range(0, rowsPerTile*colsPerTile).map(_ => Random.nextBoolean))
-            x
-        })
+//        val tiles = Range(0, totalTiles).map(i => {
+//            val x = new GameOfLifeTile((Coordinate2D(rowsPerTile*i, 0), Coordinate2D(rowsPerTile*(i+1)-1, colsPerTile)))
+//            x.fill(Range(0, rowsPerTile*colsPerTile).map(_ => Random.nextBoolean))
+//            x
+//        })
+
+        for (i <- 0 until tiles.tARow; j <- 0 until tiles.tACol) {
+            val tile = tiles.edgeList(i)(j)
+            val x = new GameOfLifeTile((Coordinate2D(rowsPerTile * i, 0), Coordinate2D(rowsPerTile * (i + 1) - 1, colsPerTile)))
+            x.fill(Range(0, rowsPerTile * colsPerTile).map(_ => Random.nextBoolean))
+
+        }
         
-        val agents: IndexedSeq[GameOfLifeTileAgent] = tiles.map(t => {
-            new GameOfLifeTileAgent(t)
-        })
+//        val agents: IndexedSeq[GameOfLifeTileAgent] = tiles.map(t => {
+//            new GameOfLifeTileAgent(t)
+//        })
+        val agents: IndexedSeq[GameOfLifeTileAgent] = for {
+            i <- 0 until tiles.tARow
+            j <- 0 until tiles.tACol
+        } yield {
+            val tile = tiles.edgeList(i)(j)
+            new GameOfLifeTileAgent(tile)
+        }
 
+        if (totalTiles > 1) {
+            Range(0, totalTiles).foreach(j => {
+                val i = j.toLong
+                agents(j).id = i
+                j match {
+                    case 0 => agents(j).connectedAgentIds = Vector(i+1)
+                    case x if x ==totalTiles-1 => agents(j).connectedAgentIds = Vector(i-1)
+                    case _ => agents(j).connectedAgentIds = Vector(i-1, i+1)
+                }
+            })
+        }
 
-        val graph: Map[Long, Iterable[Long]] = NonWrapping2DGraph(tilesPerRow, tilesPerCol)
-        Range(0, totalTiles).foreach(j => {
-            val i = j.toLong
-            agents(j).id = i
-            agents(j).connectedAgentIds=graph(i).toVector
-        })
-
-
+//        agents.foreach(a => {
+//            a.msgGenerator = a.connectedAgentIds.map(i => (i, a.tile.tbs(tiles(i.toInt)))).toMap
+//        })
         agents.foreach(a => {
-            a.msgGenerator = a.connectedAgentIds.map(i => (i, a.tile.tbs(tiles(i.toInt)))).toMap
+            a.msgGenerator = a.connectedAgentIds.map(i => (i, a.tile.tbs(tiles.edgeList(i.toInt / tiles.tACol) (i.toInt % tiles.tACol )))).toMap
         })
-        val snapshot1 = API.Simulate(agents, totalTurns)
+
+
+        val snapshot1 = API.Simulate(agents, 200)
     }
 }
