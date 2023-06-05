@@ -97,10 +97,9 @@ class GoLTileTest extends FlatSpec {
 
 
 
-    // For simplicity, hard code Boolean type instead of taking a type variable
+
     class IntGeneralGraph(val cid: (Coordinate2D, Coordinate2D)) extends Component[Int, Coordinate2D] {
-        // For simplicity, assume only vertical partitioning (send an adjacent row). only rows are padded
-        // a 2D array is uniquely defined by its shape (upper left, lower right)
+
         lazy val vertexNum: Int = (cid._2.y - cid._1.y)+1
 
         var edgeList: Map[Coordinate2D,Iterable[Coordinate2D]] = Map.empty
