@@ -62,7 +62,10 @@ class Tile2DArray[LST, MT, IncMsgBuffT](val cid: (Coordinate2D, Coordinate2D)) e
   }
 
 
-  override def tbr(c: Component[LST, Coordinate2D, MT, IncMsgBuffT], accumulator: Option[Iterable[MT] => Iterable[IncMsgBuffT]]): RcvFN = (msg: ComponentMessage) => {
+//  override def tbr(c: Component[LST, (Coordinate2D, Coordinate2D), MT, IncMsgBuffT], accumulator: Option[Iterable[MT] => Iterable[IncMsgBuffT]]): RcvFN = (msg: ComponentMessage) => ???
+
+  override def tbr(msg:ComponentMessage, accumulator: Option[Iterable[MT] => Iterable[IncMsgBuffT]]): Unit=
+  {
     msg match {
       case x: GeneralMessage[MT] => {
         x.cid match {
@@ -98,7 +101,7 @@ class Tile2DArray[LST, MT, IncMsgBuffT](val cid: (Coordinate2D, Coordinate2D)) e
               }
             }
           case _ =>
-            throw new Exception("Boolean 2d array, unsupported messages!")
+            throw new Exception(" 2d array, unsupported messages!")
         }
       }
       case _ => throw new Exception("Unsupported messages!")

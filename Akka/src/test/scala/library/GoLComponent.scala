@@ -4,7 +4,7 @@ package test
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
-class GameOfLifeTile(cid: (Coordinate2D, Coordinate2D)) extends Tile2DArray[Boolean, Int, Int](cid) {
+class GameOfLifeTile(cid: (Coordinate2D, Coordinate2D)) extends Tile2DArray[Boolean, Boolean, Int](cid) {
   override def topo(c: Coordinate2D): Iterator[Boolean] = {
     for {
       i <- Iterator.range(-1, 1)
@@ -37,6 +37,7 @@ class GameOfLifeTile(cid: (Coordinate2D, Coordinate2D)) extends Tile2DArray[Bool
 
     }
 
+
   }
 
   def update(): Unit = {
@@ -52,10 +53,12 @@ class GameOfLifeTile(cid: (Coordinate2D, Coordinate2D)) extends Tile2DArray[Bool
         val alive_neighbor = apv_acc.NoMoreMSG(Coordinate2D(i, j), partial_res, (pr, intra_comp) => pr + intra_comp.map(_ == true).count)
         //step function
         newBoard(i)(j)=apv_acc.step(oldBoard(i)(j),alive_neighbor)
-
+        //clean the msg buffer
+        MsgBox(i)(j).clear()
 
       }
     }
+
     oldBoard = newBoard
   }
 

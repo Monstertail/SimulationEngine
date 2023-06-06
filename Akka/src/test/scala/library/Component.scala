@@ -19,10 +19,11 @@ import scala.util.Random
     // case class TileCoordinate(x: Coordinate2D, y: Coordinate2D) extends Coordinate
 
     trait ComponentMessage extends Message
+
     //trait parameter requires scala 3
 //    trait ComponentMessage[CompIdT](Sid:CompIdT, Did:CompIdT) extends Message
     class GeneralMessage[MT](val content: Iterable[MT], val cid: (Coordinate2D, Coordinate2D)) extends ComponentMessage
-    class Boolean2DArrayMessage(val content: Iterable[Boolean], val cid: (Coordinate2D, Coordinate2D)) extends ComponentMessage
+
 
     trait Component[LST, CompIdT, MT,IncMsgBuffT] {
 
@@ -34,38 +35,33 @@ import scala.util.Random
 
         var compNeighborList: IndexedSeq[Component[LST,CompIdT,MT, IncMsgBuffT]] = _
         // record the component ID
-        var CompId: CompIdT = _
+        var CompId: (CompIdT,CompIdT) = _
 
 
-        val sndHndlr: mutable.Map[CompIdT, SndFN] = mutable.Map.empty
+        val sndHndlr: mutable.Map[(CompIdT,CompIdT), SndFN] = mutable.Map.empty
 
-        val rcvHndlr: mutable.Map[CompIdT, RcvFN] = mutable.Map.empty
+        val rcvHndlr: mutable.Map[(CompIdT,CompIdT), RcvFN] = mutable.Map.empty
 
 
-        // make send and rcv handlers ; call tbs and tbr
-        def init(): Unit = {
-            compNeighborList.foreach(n => {
-                //update sender handler
-                sndHndlr.update(n.CompId, tbs(n,None))
-                //update receive handler
-                rcvHndlr.update(n.CompId, tbr(n,None))
-            })
-        }
+//        // make send and rcv handlers ; call tbs and tbr
+//        def init(): Unit = {
+//            compNeighborList.foreach(n => {
+//                //update sender handler
+//                sndHndlr.update(n.CompId, tbs(n,None))
+//                //update receive handler
+//                rcvHndlr.update(n.CompId, tbr(n,None))
+//            })
+//        }
 
         def topo(c: CompIdT): Iterator[LST] = ???
 
-//        // (not belong to this library)handwritten version before
-//        def actionPerVertexStream(v: T, vs: Iterator[T]): T = ???
-//        def actionPerVertexFused(v: C): T = ???
 
 
-        def tbs(c: Component[LST, CompIdT, MT,IncMsgBuffT],preComp:Option[Iterable[LST]=>Iterable[MT]]): () => ComponentMessage = ???
 
-        //(not belong to this library) handwritten version with pre-allocating
-//        def tbr(msg: ComponentMessage): Unit = ???
+        def tbs(c: Component[LST, CompIdT, MT, IncMsgBuffT],preComp:Option[Iterable[LST]=>Iterable[MT]]): () => ComponentMessage = ???
 
-        def tbr(c: Component[LST, CompIdT, MT,IncMsgBuffT],accumulator: Option[Iterable[MT]=>Iterable[IncMsgBuffT]]): RcvFN = (msg: ComponentMessage) => ???
-
+//        def tbr(c: Component[LST, CompIdT, MT, IncMsgBuffT],accumulator: Option[Iterable[MT]=>Iterable[IncMsgBuffT]]): RcvFN = (msg: ComponentMessage) => ???
+        def tbr(msg: ComponentMessage,accumulator: Option[Iterable[MT]=>Iterable[IncMsgBuffT]]): Unit =  ???
 
         // Another way to decide the patterns
 //        def tbr(c: Component[LST, CompIdT, IncMsgBuffT], tbrPattern: String): RcvFN = {

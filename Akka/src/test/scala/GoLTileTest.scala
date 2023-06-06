@@ -15,11 +15,27 @@ class GoLTileTest extends FlatSpec {
         var msgGenerator: Map[Long, () => ComponentMessage] = Map[Long, ()=> ComponentMessage]()
 //        var msgGenerator: Map[Long, SndFN] = Map[Long, SndFN]()
 
+
+        def calculateCounts(iterable: Iterable[Boolean]): Iterable[Int] = {
+            val seq = iterable.toSeq
+            seq.zipWithIndex.map { case (current, index) =>
+                val prev = if (index > 0) Some(seq(index - 1)) else None
+                val next = if (index < seq.size - 1) Some(seq(index + 1)) else None
+                val count = Seq(prev, Some(current), next).flatten.count(_ == true)
+                count
+            }
+        }
+
+        val accumulator: Option[Iterable[Boolean] => Iterable[Int]] = Some(calculateCounts)
+
+
         override def run(): Int = {
             receivedMessages.foreach(i => {
 //                tile.tbr(i.asInstanceOf[ComponentMessage])
-                tile.tbr()(i.asInstanceOf[ComponentMessage],None)
-                tile.tbr()(i.asInstanceOf[ComponentMessage],None)
+
+                tile.tbr(i.asInstanceOf[ComponentMessage],accumulator)
+
+
             })
             receivedMessages.clear()
             connectedAgentIds.foreach(i => {
