@@ -22,7 +22,7 @@ class GoLTileTest extends FlatSpec {
     type RcvFN = ComponentMessage => Unit
 
     trait ComponentMessage extends Message
-    class GeneralMessage[MT](val content: Iterable[MT], val cid: (Coordinate2D, Coordinate2D)) extends ComponentMessage
+//    class GeneralMessage[MT](val content: Iterable[MT], val cid: (Coordinate2D, Coordinate2D)) extends ComponentMessage
     class Boolean2DArrayMessage(val content: Iterable[Boolean], val cid: (Coordinate2D, Coordinate2D)) extends ComponentMessage
 
     trait Component[T, C] {
@@ -62,6 +62,7 @@ class GoLTileTest extends FlatSpec {
 
 
     }
+
 
     //------------------------End of the library--------------------
 
@@ -263,42 +264,42 @@ class GoLTileTest extends FlatSpec {
 
         }
 
-//        //In GOL, there is a preComputing case
-        override def tbr_preCompute(msg: ComponentMessage): Unit = {
-            msg match {
-                case x: GeneralMessage[Int] => {
-                    x.cid match {
-                        case (Coordinate2D(x1, y1), Coordinate2D(x2, y2)) if (y1 == cid._1.y && y2 == cid._2.y) =>
-                            if (x1 > cid._2.x) {
-                                x.content.asInstanceOf[Iterable[Int]].copyToArray(IncUpdateResults(rows-3))
-                            } else {
-                                x.content.asInstanceOf[Iterable[Int]].copyToArray(IncUpdateResults(0))
-                            }
-                        case _ =>
-                            throw new Exception("Boolean 2d array, unsupported messages!")
-                    }
-                }
-                case _ => throw new Exception("Unsupported messages!")
-            }
-        }
+////        //In GOL, there is a preComputing case
+//        override def tbr_preCompute(msg: ComponentMessage): Unit = {
+//            msg match {
+//                case x: GeneralMessage[Int] => {
+//                    x.cid match {
+//                        case (Coordinate2D(x1, y1), Coordinate2D(x2, y2)) if (y1 == cid._1.y && y2 == cid._2.y) =>
+//                            if (x1 > cid._2.x) {
+//                                x.content.asInstanceOf[Iterable[Int]].copyToArray(IncUpdateResults(rows-3))
+//                            } else {
+//                                x.content.asInstanceOf[Iterable[Int]].copyToArray(IncUpdateResults(0))
+//                            }
+//                        case _ =>
+//                            throw new Exception("Boolean 2d array, unsupported messages!")
+//                    }
+//                }
+//                case _ => throw new Exception("Unsupported messages!")
+//            }
+//        }
 
 
-        def update(): Unit = {
-            for (i <- (1 to rows-1)) {
-                for (j <- (0 to cols-1)) {
-                    // newBoard(i)(j) = actionPerVertexFused(Coordinate2D(i, j))
-//                    newBoard(i)(j) = actionPerVertexStream(oldBoard(i)(j), topo(Coordinate2D(i, j)))
-
-                    val apv=new IncActionPerVertex[Boolean,Boolean]
-                    //three computing patterns have the same interface
-                    apv.IncMSG(Coordinate2D(i, j),Option(MsgBox(i)(j)))
-                    newBoard(i)(j)=apv.NoMoreMSG(Coordinate2D(i, j),Option(IncUpdateResults(i)(j)))
-
-
-                }
-            }
-            oldBoard = newBoard
-        }
+//        def update(): Unit = {
+//            for (i <- (1 to rows-1)) {
+//                for (j <- (0 to cols-1)) {
+////                     newBoard(i)(j) = actionPerVertexFused(Coordinate2D(i, j))
+////                    newBoard(i)(j) = actionPerVertexStream(oldBoard(i)(j), topo(Coordinate2D(i, j)))
+//
+//                    val apv=new IncActionPerVertex[Boolean,Boolean]
+//                    //three computing patterns have the same interface
+//                    apv.IncMSG(Coordinate2D(i, j),Option(MsgBox(i)(j)))
+//                    newBoard(i)(j)=apv.NoMoreMSG(Coordinate2D(i, j),Option(IncUpdateResults(i)(j)))
+//
+//
+//                }
+//            }
+//            oldBoard = newBoard
+//        }
     }
 
     class GameOfLifeTile(cid: (Coordinate2D, Coordinate2D)) extends Boolean2DArray(cid) {
@@ -396,7 +397,7 @@ class GoLTileTest extends FlatSpec {
             }
 
 
-            override def NoMoreMSG[Int]( crd:Coordinate,pr: Option[Int]): Boolean = {
+            def NoMoreMSG( crd:Coordinate,pr: Option[Int]): Boolean = {
 
                 var ni = -1
                 var nj = -1
@@ -404,7 +405,10 @@ class GoLTileTest extends FlatSpec {
                 val j=crd.asInstanceOf[Coordinate2D].y
                 //for pattern 1 Inbox message, pr is none
                 //for pattern 2: Accumulator and pattern 3: pre-compute, pr is already calculated
-                accumulator+=  pr.getOrElse(0)
+                pr match {
+                    case Some(value) => accumulator = accumulator + value
+                    case None =>
+                }
 
                 while (ni <= 1) {
                     nj = -1
@@ -413,8 +417,13 @@ class GoLTileTest extends FlatSpec {
                             val row = i + ni // handle wrapping at edges
                             val col = j + nj // handle wrapping at edges
 
-                            if (oldBoard(row)(col))
-                                accumulator = accumulator + 1
+                            if(row>=0 && row <=rows-3 && col>=0 && col<=cols-1){
+                                if (oldBoard(row)(col))
+                                    accumulator = accumulator + 1
+
+                            }
+
+
                         }
                         nj = nj + 1
                     }
@@ -442,11 +451,28 @@ class GoLTileTest extends FlatSpec {
 
         }
 
+        def update(): Unit = {
+            for (i <- (1 to rows - 3)) {
+                for (j <- (0 to cols - 1)) {
+                    //                     newBoard(i)(j) = actionPerVertexFused(Coordinate2D(i, j))
+                    //                    newBoard(i)(j) = actionPerVertexStream(oldBoard(i)(j), topo(Coordinate2D(i, j)))
+
+                    val apv = new GoLAPV
+                    //three computing patterns have the same interface
+                    apv.IncMSG(Coordinate2D(i, j), Option(MsgBox(i)(j)))
+                    newBoard(i)(j) = apv.NoMoreMSG(Coordinate2D(i, j), Option(IncUpdateResults(i)(j)))
+
+
+                }
+            }
+            oldBoard = newBoard
+        }
+
     }
 
     class GameOfLifeTileAgent(val tile: GameOfLifeTile) extends Actor {
-//        var msgGenerator: Map[Long, () => ComponentMessage] = Map[Long, ()=> ComponentMessage]()
-        var msgGenerator: Map[Long, SndFN] = Map[Long, SndFN]()
+        var msgGenerator: Map[Long, () => ComponentMessage] = Map[Long, ()=> ComponentMessage]()
+//        var msgGenerator: Map[Long, SndFN] = Map[Long, SndFN]()
         
         override def run(): Int = {
             receivedMessages.foreach(i => {
@@ -470,16 +496,20 @@ class GoLTileTest extends FlatSpec {
         val tileArrayRows:Int=1
         val tileArrayCols:Int=1
 
+        //component topo
+
         val tiles = Range(0, totalTiles).map(i => {
             val x = new GameOfLifeTile((Coordinate2D(rowsPerTile*i, 0), Coordinate2D(rowsPerTile*(i+1)-1, colsPerTile)))
             x.fill(Range(0, rowsPerTile*colsPerTile).map(_ => Random.nextBoolean))
             x
         })
 
+        //collection of agents
         val agents: IndexedSeq[GameOfLifeTileAgent] = tiles.map(t => {
             new GameOfLifeTileAgent(t)
         })
 
+        //agents topo
         if (totalTiles > 1) {
             Range(0, totalTiles).foreach(j => {
                 val i = j.toLong
@@ -495,29 +525,6 @@ class GoLTileTest extends FlatSpec {
         agents.foreach(a => {
             a.msgGenerator = a.connectedAgentIds.map(i => (i, a.tile.tbs(tiles(i.toInt)))).toMap
         })
-
-
-//        //nested defination
-//        val tiles=new TilesTopo(tileArrayRows,tileArrayCols)
-//
-//        for (i <- 0 until tiles.tARow; j <- 0 until tiles.tACol) {
-//            val tile = tiles.edgeList(i)(j)
-//            val x = new GameOfLifeTile((Coordinate2D(rowsPerTile * i, 0), Coordinate2D(rowsPerTile * (i + 1) - 1, colsPerTile)))
-//            x.fill(Range(0, rowsPerTile * colsPerTile).map(_ => Random.nextBoolean))
-//
-//        }
-//
-//        val agents: IndexedSeq[GameOfLifeTileAgent] = for {
-//            i <- 0 until tiles.tARow
-//            j <- 0 until tiles.tACol
-//        } yield {
-//            val tile = tiles.edgeList(i)(j)
-//            new GameOfLifeTileAgent(tile)
-//        }
-//
-//        agents.foreach(a => {
-//            a.msgGenerator = a.connectedAgentIds.map(i => (i, a.tile.tbs(tiles.edgeList(i.toInt / tiles.tACol) (i.toInt % tiles.tACol )))).toMap
-//        })
 
 
         val snapshot1 = API.Simulate(agents, 200)
