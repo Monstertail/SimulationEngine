@@ -50,6 +50,7 @@ class GameOfLifeTile(cid: (Coordinate2D, Coordinate2D)) extends Tile2DArray[Bool
         //for accumulator
         val partial_res = apv_acc.IncMSG(Coordinate2D(i, j), MsgBox(i)(j), buffer=>buffer.head )
         val alive_neighbor = apv_acc.NoMoreMSG(Coordinate2D(i, j), partial_res, (pr, intra_comp) => pr + intra_comp.map(_ == true).count)
+        //step function
         newBoard(i)(j)=apv_acc.step(oldBoard(i)(j),alive_neighbor)
 
 
