@@ -18,7 +18,8 @@ class GoLTileTest extends FlatSpec {
         override def run(): Int = {
             receivedMessages.foreach(i => {
 //                tile.tbr(i.asInstanceOf[ComponentMessage])
-                tile.tbr_accumulator(i.asInstanceOf[ComponentMessage])
+                tile.tbr()(i.asInstanceOf[ComponentMessage],None)
+                tile.tbr()(i.asInstanceOf[ComponentMessage],None)
             })
             receivedMessages.clear()
             connectedAgentIds.foreach(i => {
@@ -64,7 +65,7 @@ class GoLTileTest extends FlatSpec {
         }
 
         agents.foreach(a => {
-            a.msgGenerator = a.connectedAgentIds.map(i => (i, a.tile.tbs(tiles(i.toInt)))).toMap
+            a.msgGenerator = a.connectedAgentIds.map(i => (i, a.tile.tbs(tiles(i.toInt),None))).toMap
         })
 
 
