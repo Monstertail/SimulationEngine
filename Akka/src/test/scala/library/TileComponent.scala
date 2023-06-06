@@ -3,9 +3,9 @@ package simulation.akka
 package test
 
 import scala.collection.mutable.ArrayBuffer
+import scala.reflect.ClassTag
 
-
-class Tile2DArray[LST, MT, IncMsgBuffT](val cid: (Coordinate2D, Coordinate2D)) extends Component[LST, Coordinate2D, MT, IncMsgBuffT] {
+class Tile2DArray[LST: ClassTag, MT, IncMsgBuffT](val cid: (Coordinate2D, Coordinate2D)) extends Component[LST, Coordinate2D, MT, IncMsgBuffT] {
   // For simplicity, assume only vertical partitioning (send an adjacent row). only rows are padded
   // a 2D array is uniquely defined by its shape (upper left, lower right)
   lazy val rows: Int = (cid._2.x - cid._1.x)
@@ -15,7 +15,8 @@ class Tile2DArray[LST, MT, IncMsgBuffT](val cid: (Coordinate2D, Coordinate2D)) e
   var newBoard: Array[Array[LST]] = Array.ofDim[LST](rows, cols)
 
   //To store the messages from other components
-  var MsgBox: Array[Array[ArrayBuffer[IncMsgBuffT]]] = Array.ofDim[ArrayBuffer[IncMsgBuffT]](rows, cols)
+//  var MsgBox: Array[Array[ArrayBuffer[IncMsgBuffT]]] = Array.ofDim[ArrayBuffer[IncMsgBuffT]](rows, cols)
+  var MsgBox: Array[Array[ArrayBuffer[IncMsgBuffT]]] = Array.fill(rows, cols)(ArrayBuffer.empty[IncMsgBuffT])
 
 
   // Fill in the 2D grid with init values in the shape
@@ -73,9 +74,12 @@ class Tile2DArray[LST, MT, IncMsgBuffT](val cid: (Coordinate2D, Coordinate2D)) e
             if (x1 > cid._2.x) {
               if (accumulator.isDefined) {
                 val accResult = accumulator.get(x.content)
-//                accResult.copyToArray(MsgBox(rows - 1))
+
                 accResult.zipWithIndex.foreach { case (elem, index) =>
                   MsgBox(rows-1)(index).append(elem)
+
+
+
                 }
 
               } else {
@@ -89,10 +93,12 @@ class Tile2DArray[LST, MT, IncMsgBuffT](val cid: (Coordinate2D, Coordinate2D)) e
             } else {
               if (accumulator.isDefined) {
                 val accResult = accumulator.get(x.content)
-                //                accResult.copyToArray(MsgBox(rows - 1))
+
                 accResult.zipWithIndex.foreach { case (elem, index) =>
                   MsgBox(0)(index).append(elem)
                 }
+                // TODO DEBUG
+                println(MsgBox(rows-1)(0))
 
               } else {
                 x.content.asInstanceOf[Iterable[IncMsgBuffT]].zipWithIndex.foreach { case (elem, index) =>
@@ -112,17 +118,16 @@ class Tile2DArray[LST, MT, IncMsgBuffT](val cid: (Coordinate2D, Coordinate2D)) e
   class accumulator_APV[PRT] extends IncActionPerVertex[PRT]{
 
     var accumulator:PRT= _
-    override def IncMSG(crd: Coordinate, crossComp: Iterable[IncMsgBuffT], step1: Iterable[IncMsgBuffT] => PRT): PRT = {
+    override def IncMSG(crd: Coordinate, crossComp: Iterable[IncMsgBuffT], initV:PRT,step1: Iterable[IncMsgBuffT] => PRT): PRT = {
       crossComp.isEmpty match {
         case false =>
-          //for Pattern 1: inbox messages
+
           accumulator = step1(crossComp)
           accumulator
 
         case true =>
-          //for pattern 2: Accumulator and pattern 3: pre-compute, we calculate the partial results instead of storing the messages
-          // We can skip IncMSG in this case, only need to set accumulator to init value
-          accumulator = _
+
+          accumulator = initV
           accumulator
 
       }

@@ -83,10 +83,10 @@ import scala.util.Random
         trait IncActionPerVertex[PRT] {
             //update the result with information from cross-component messages
 
-            //for pattern 1: Inbox message, IncMsgBuffT could be Iterable[LST]
+            //for pattern 1: Inbox message, IncMsgBuffT could be the same as Iterable[LST]
             //for pattern 2: Accumulator and pattern 3: pre-compute, we already process crossComp information
-            // by calculating the partial results. So IncMsgBuffT could be PRT(partial result type).
-            def IncMSG(crd: Coordinate, crossComp: Iterable[IncMsgBuffT], step1:Iterable[IncMsgBuffT] => PRT ): PRT = ???
+            // by calculating the partial results. So IncMsgBuffT could be the same as PRT(partial result type).
+            def IncMSG(crd: Coordinate, crossComp: Iterable[IncMsgBuffT], initV:PRT,step1:Iterable[IncMsgBuffT] => PRT ): PRT = ???
 
             //update the result with information inside the component
             def NoMoreMSG(crd: Coordinate, partial_result: PRT,step2:(PRT,Iterator[LST]) => PRT): PRT = ???

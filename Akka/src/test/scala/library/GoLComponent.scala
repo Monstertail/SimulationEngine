@@ -41,16 +41,26 @@ class GameOfLifeTile(cid: (Coordinate2D, Coordinate2D)) extends Tile2DArray[Bool
   }
 
   def update(): Unit = {
-    for (i <- (1 to rows - 1)) {
-      for (j <- (0 to cols - 1)) {
-        //                     newBoard(i)(j) = actionPerVertexFused(Coordinate2D(i, j))
-        //                    newBoard(i)(j) = actionPerVertexStream(oldBoard(i)(j), topo(Coordinate2D(i, j)))
 
-        val apv_acc = new GoLAPV_acc
+    val apv_acc = new GoLAPV_acc
+    for (i <- (0 to rows - 1)) {
+      for (j <- (0 to cols - 1)) {
+
+
+
         //three computing patterns have the same interface
         //for accumulator
-        val partial_res = apv_acc.IncMSG(Coordinate2D(i, j), MsgBox(i)(j), buffer=>buffer.head )
-        val alive_neighbor = apv_acc.NoMoreMSG(Coordinate2D(i, j), partial_res, (pr, intra_comp) => pr + intra_comp.map(_ == true).count)
+
+        // TODO Debug: always empty
+        if (MsgBox(i)(j) != null && MsgBox(i)(j).isEmpty==false){
+          println(MsgBox(i)(j))
+        }
+
+        val partial_res = apv_acc.IncMSG(Coordinate2D(i, j), MsgBox(i)(j),0, buffer=>buffer.head )
+//        //Debug: hard code case
+//        val partial_res = apv_acc.IncMSG(Coordinate2D(i, j),mutable.Iterable(1),0, buffer=>buffer.head )
+        val alive_neighbor = apv_acc.NoMoreMSG(Coordinate2D(i, j), partial_res, (pr, intra_comp) => pr + intra_comp.count(_ == true))
+
         //step function
         newBoard(i)(j)=apv_acc.step(oldBoard(i)(j),alive_neighbor)
         //clean the msg buffer
