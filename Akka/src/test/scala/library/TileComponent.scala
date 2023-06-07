@@ -114,7 +114,9 @@ class Tile2DArray[LST: ClassTag, MT, IncMsgBuffT](val cid: (Coordinate2D, Coordi
     }
   }
 
-
+  // An example of pattern: accumulator. For other two patterns: inboxMsg and preCompute, they have the same interface.
+  //The difference lies on the step1() and IncMsgBuffT.
+  // In GoL,for pattern: inboxMsg,IncMsgBuffT is Boolean; while for pattern preCompute and accumulator, IncMsgBuffT is Int( to store the number of alive neighbors)
   class accumulator_APV[PRT] extends IncActionPerVertex[PRT]{
 
     var accumulator:PRT= _
@@ -146,5 +148,65 @@ class Tile2DArray[LST: ClassTag, MT, IncMsgBuffT](val cid: (Coordinate2D, Coordi
 
 
   }
+
+
+  class inboxMsg_APV[PRT <: Iterable[LST]] extends IncActionPerVertex[PRT] {
+
+    // there is no need to IncMsg as we already store the cross-component messages in MsgBox with Iterable[LST] format.
+
+    //PRT could be Iterable[LST]
+    override def NoMoreMSG(crd: Coordinate, partial_result: PRT, step2: (PRT, Iterator[LST]) => PRT): PRT = {
+      //traverse neighbor and got the partial result
+
+      val gx = step2(partial_result, topo(crd.asInstanceOf[Coordinate2D]))
+      gx
+
+    }
+
+
+  }
+
+
+  //pattern preComp_APV[PRT] has the same interface with pattern accumulator_APV[PRT].
+  // The difference is : for pattern preComp_APV[PRT], the value is pre-aggregated before sending messages,
+  // while for pattern accumulator_APV[PRT], the value is accumulated after receiving messages.
+  // Therefore, they have different tbr and tbs.
+  class preComp_APV[PRT] extends IncActionPerVertex[PRT]{
+
+    var partialRes: PRT = _
+
+    override def IncMSG(crd: Coordinate, crossComp: Iterable[IncMsgBuffT], initV: PRT, step1: Iterable[IncMsgBuffT] => PRT): PRT = {
+      crossComp.isEmpty match {
+        case false =>
+
+          partialRes = step1(crossComp)
+          partialRes
+
+        case true =>
+
+          partialRes = initV
+          partialRes
+
+      }
+
+
+    }
+
+
+    override def NoMoreMSG(crd: Coordinate, partial_result: PRT, step2: (PRT, Iterator[LST]) => PRT): PRT = {
+      //traverse neighbor and got the partial result
+
+      val gx = step2(partial_result, topo(crd.asInstanceOf[Coordinate2D]))
+      gx
+
+    }
+
+  }
+
+
+
+
+
+
 
 }
