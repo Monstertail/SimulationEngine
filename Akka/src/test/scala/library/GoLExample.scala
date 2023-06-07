@@ -48,8 +48,6 @@ class GameOfLifeTile(cid: (Coordinate2D, Coordinate2D)) extends Tile2DArray[Bool
     for (i <- (0 to rows - 1)) {
       for (j <- (0 to cols - 1)) {
 
-
-
         //three computing patterns have the same interface
         //for accumulator
 

@@ -78,8 +78,6 @@ class Tile2DArray[LST: ClassTag, MT, IncMsgBuffT](val cid: (Coordinate2D, Coordi
                 accResult.zipWithIndex.foreach { case (elem, index) =>
                   MsgBox(rows-1)(index).append(elem)
 
-
-
                 }
 
               } else {
