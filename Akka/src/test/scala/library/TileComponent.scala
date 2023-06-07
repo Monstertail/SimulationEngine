@@ -15,7 +15,7 @@ class Tile2DArray[LST: ClassTag, MT, IncMsgBuffT](val cid: (Coordinate2D, Coordi
   var newBoard: Array[Array[LST]] = Array.ofDim[LST](rows, cols)
 
   //To store the messages from other components
-//  var MsgBox: Array[Array[ArrayBuffer[IncMsgBuffT]]] = Array.ofDim[ArrayBuffer[IncMsgBuffT]](rows, cols)
+
   var MsgBox: Array[Array[ArrayBuffer[IncMsgBuffT]]] = Array.fill(rows, cols)(ArrayBuffer.empty[IncMsgBuffT])
 
 
@@ -97,8 +97,8 @@ class Tile2DArray[LST: ClassTag, MT, IncMsgBuffT](val cid: (Coordinate2D, Coordi
                 accResult.zipWithIndex.foreach { case (elem, index) =>
                   MsgBox(0)(index).append(elem)
                 }
-                // TODO DEBUG
-                println(MsgBox(rows-1)(0))
+//                // TODO DEBUG
+//                println(MsgBox(rows-1)(0))
 
               } else {
                 x.content.asInstanceOf[Iterable[IncMsgBuffT]].zipWithIndex.foreach { case (elem, index) =>

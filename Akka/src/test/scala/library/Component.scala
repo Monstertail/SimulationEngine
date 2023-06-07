@@ -26,6 +26,8 @@ import scala.util.Random
 
 
     trait Component[LST, CompIdT, MT,IncMsgBuffT] {
+        //LST: local state type; CompIdT:ComponentId type; MT:Message type;
+        // IncMsgBuffT: the type of every element in Msg buffer for every vertex. For every vertex, its message box is ArrayBuffer[IncMsgBuffT].
 
         /* run at sim initialization time, not during a step
            generates a function to execute at runtime
@@ -63,7 +65,7 @@ import scala.util.Random
 //        def tbr(c: Component[LST, CompIdT, MT, IncMsgBuffT],accumulator: Option[Iterable[MT]=>Iterable[IncMsgBuffT]]): RcvFN = (msg: ComponentMessage) => ???
         def tbr(msg: ComponentMessage,accumulator: Option[Iterable[MT]=>Iterable[IncMsgBuffT]]): Unit =  ???
 
-        // Another way to decide the patterns
+        // Another way to decide the patterns TODO: Discuss whether it is graceful?
 //        def tbr(c: Component[LST, CompIdT, IncMsgBuffT], tbrPattern: String): RcvFN = {
 //            tbrPattern match {
 //                case "inboxMsg" => (msg: ComponentMessage) => tbr_inboxMsg(msg)

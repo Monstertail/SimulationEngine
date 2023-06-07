@@ -17,8 +17,9 @@ class GameOfLifeTile(cid: (Coordinate2D, Coordinate2D)) extends Tile2DArray[Bool
   }
 
 
+  //a case of pattern accumulator
   class GoLAPV_acc extends accumulator_APV[Int]{
-    //a case of accumulator
+
     def step(oldState:Boolean, aliveNeighbors:Int):Boolean={
 
       if (oldState) {
@@ -51,7 +52,7 @@ class GameOfLifeTile(cid: (Coordinate2D, Coordinate2D)) extends Tile2DArray[Bool
         //three computing patterns have the same interface
         //for accumulator
 
-        // TODO Debug: always empty
+        // TODO Debug: why MsgBox is always empty?
         if (MsgBox(i)(j) != null && MsgBox(i)(j).isEmpty==false){
           println(MsgBox(i)(j))
         }
