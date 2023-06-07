@@ -10,8 +10,9 @@ class GameOfLifeTile(cid: (Coordinate2D, Coordinate2D)) extends Tile2DArray[Bool
       i <- Iterator.range(-1, 1)
       j <- Iterator.range(-1, 1)
       if !(i == 0 && j == 0)
-      dx = (c.x + i + rows) % rows
-      dy = (c.y + j + cols) % cols
+      dx = c.x + i
+      dy = c.y + j
+      if dx >= 0 && dx <= rows - 1 && dy >= 0 && dy <= cols - 1
     }
     yield oldBoard(dx)(dy)
   }
@@ -52,10 +53,10 @@ class GameOfLifeTile(cid: (Coordinate2D, Coordinate2D)) extends Tile2DArray[Bool
         //three computing patterns have the same interface
         //for accumulator
 
-        // TODO Debug: why MsgBox is always empty?
-        if (MsgBox(i)(j) != null && MsgBox(i)(j).isEmpty==false){
-          println(MsgBox(i)(j))
-        }
+//        // TODO Debug: why MsgBox is always empty?
+//        if (MsgBox(i)(j) != null && MsgBox(i)(j).isEmpty==false){
+//          println(MsgBox(i)(j))
+//        }
 
         val partial_res = apv_acc.IncMSG(Coordinate2D(i, j), MsgBox(i)(j),0, buffer=>buffer.head )
 //        //Debug: hard code case
